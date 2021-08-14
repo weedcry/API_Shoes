@@ -1,5 +1,6 @@
 package api.service;
 
+import api.DTO.productdetailDTO;
 import api.DTO.productsDTO;
 import api.DTO.shopcartDTO;
 import api.entity.customersEntity;
@@ -45,6 +46,11 @@ public class shopcartService {
                 shopcartEntity -> {
                     shopcartDTO shopcartsDTO = modelMapper.map(shopcartEntity,shopcartDTO.class);
                     shopcartsDTO.setCustomersid(shopcartEntity.getCustomers().getId());
+                    productdetailDTO productdetailDTO = new productdetailDTO();
+                    productdetailDTO.setId(shopcartEntity.getProductdetail().getId());
+                    productdetailDTO.setProductid(shopcartEntity.getProductdetail().getProductsEntity().getId());
+                    productdetailDTO.setSize(shopcartEntity.getProductdetail().getSize());
+                    shopcartsDTO.setProductdetail(productdetailDTO);
 //                    shopcartsDTO.setProductsid(shopcartEntity.getProducts().getId());
 //                    shopcartsDTO.setSize(shopcartEntity.getSize());
                     return shopcartsDTO;
@@ -56,9 +62,14 @@ public class shopcartService {
 
 
     public shopcartEntity saveshopcart(shopcartDTO shopcartsDTO,String username){
+        shopcartEntity shopcartsEntity = null;
         customersEntity customersEntity = customersRepository.findByUsers_id(username);
         productdetailEntity  productdetailEntity  = productdetailRepository.findById(shopcartsDTO.getProductdetail().getId());
-        shopcartEntity shopcartsEntity = shopcartRepository.findbyAttribute(customersEntity.getId(),
+        if(productdetailEntity == null){
+            return  shopcartsEntity;
+        }
+
+        shopcartsEntity = shopcartRepository.findbyAttribute(customersEntity.getId(),
                 productdetailEntity.getId());
         if(shopcartsEntity != null){
             int total = shopcartsEntity.getQuantity() + shopcartsDTO.getQuantity();
@@ -77,6 +88,8 @@ public class shopcartService {
     public shopcartEntity updateShopcart(shopcartDTO shopcartsDTO){
         shopcartEntity shopcartsEntity = shopcartRepository.findById(shopcartsDTO.getId());
         shopcartsEntity.setQuantity(shopcartsDTO.getQuantity());
+        productdetailEntity productDetail = productdetailRepository.findById(shopcartsDTO.getProductdetail().getId());
+        shopcartsEntity.setProductdetail(productDetail);
         shopcartEntity shopcart = shopcartRepository.save(shopcartsEntity);
         return shopcart;
     }

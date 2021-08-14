@@ -101,7 +101,7 @@ public class authController {
         }
 
         // Create new user's account
-        usersEntity userEntity = new usersEntity(signUpRequest.getEmail(), signUpRequest.getName(),
+        usersEntity userEntity = new usersEntity(signUpRequest.getEmail(), signUpRequest.getFirstname(),
                 signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()));
 
         Set<String> strRoles = signUpRequest.getRole();

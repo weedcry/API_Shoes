@@ -30,7 +30,7 @@ public class orderdetailService {
                 orderdetailEntity -> {
                     orderdetailDTO orderdetail = modelMapper.map(orderdetailEntity,orderdetailDTO.class);
 //                    orderdetail.setProductid(orderdetailEntity.getProductsEntity().getId());
-                    orderdetail.setOrderid(orderdetailEntity.getOrdersEntity().getId());
+//                    orderdetail.setOrderid(orderdetailEntity.getOrdersEntity().getId());
 //                    orderdetail.setSize(orderdetailEntity.getSize());
                     return orderdetail;
                 }
@@ -43,7 +43,7 @@ public class orderdetailService {
                 orderdetailEntity -> {
                     orderdetailDTO orderdetail = modelMapper.map(orderdetailEntity,orderdetailDTO.class);
 //                    orderdetail.setProductid(orderdetailEntity.getProduct().getId());
-                    orderdetail.setOrderid(orderdetailEntity.getOrdersEntity().getId());
+//                    orderdetail.setOrderid(orderdetailEntity.getOrdersEntity().getId());
 //                    orderdetail.setSize(orderdetailEntity.getSize());
                     return orderdetail;
                 }

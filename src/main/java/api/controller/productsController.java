@@ -7,10 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/product")
@@ -39,26 +42,50 @@ public class productsController {
 
     @GetMapping("/page")
     public ResponseEntity getlistproductpagination(
-         @RequestParam(name = "page", defaultValue = "0") int page,
-         @RequestParam(name = "size", defaultValue = "5") int size){
-        ResultPage resultPage = new ResultPage();
-        Pageable pageable = new PageRequest(page,size);
-        resultPage.setPage(page);
-        resultPage.setListResult(productsService.getlistproductpagination(pageable));
-        resultPage.setTotalpage((int) Math.ceil((double) (productsService.totalpage()) / size));
+         @RequestParam(name = "page", defaultValue = "1") int page,
+         @RequestParam(name = "size", defaultValue = "8") int size,
+         @RequestParam(name = "sort", defaultValue = "createddate") String sortType,
+         @RequestParam(name = "order", defaultValue = "ASC") String orderby,
+         @RequestParam(name = "category", required = false) Long categoryid){
+        return ResponseEntity.ok().body(productsService.productPagination(page,size,sortType,categoryid,orderby));
+    }
+
+
+    @GetMapping("/page/search")
+    public ResponseEntity getlistproductpaginationSearch(
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "8") int size,
+            @RequestParam(name = "sort", defaultValue = "createddate") String sortType,
+            @RequestParam(name = "order", defaultValue = "ASC") String orderBy,
+            @RequestParam(name = "title") Optional<String> title ){
+        ResultPage resultPage = productsService.productPaginationName(page,size,title,sortType,orderBy);
+        if(resultPage == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(" not found");
+        }
         return ResponseEntity.ok().body(resultPage);
     }
 
+
+
     @PostMapping("")
     public ResponseEntity createproduct(@Valid @RequestBody productsDTO product){
-        productsDTO productDTO = productsService.saveproducts(product);
+        String username = "";
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails)principal).getUsername();
+        }
+        productsDTO productDTO = productsService.saveproducts(product,username);
         return ResponseEntity.status(HttpStatus.CREATED).body(productDTO);
     }
 
     @PutMapping("")
     public ResponseEntity updateproduct(@Valid @RequestBody productsDTO product){
-
-        productsDTO productDTO = productsService.saveproducts(product);
+        String username = "";
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails)principal).getUsername();
+        }
+        productsDTO productDTO = productsService.saveproducts(product,username);
         return ResponseEntity.status(HttpStatus.CREATED).body(productDTO);
     }
 

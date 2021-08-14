@@ -35,7 +35,7 @@ public class productdetailEntity {
     private Collection<shopcartEntity> shopcartproduct;
 
 
-    @OneToMany(mappedBy = "productdetailEntity")
+    @OneToMany(mappedBy = "productdetailEntity",cascade = CascadeType.ALL)
     private Collection<orderdetailEntity> orderdetailEntities;
 
 

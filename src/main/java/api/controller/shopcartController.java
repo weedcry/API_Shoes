@@ -61,7 +61,7 @@ public class shopcartController {
     }
 
 
-    @DeleteMapping("")
+    @PostMapping("/delete")
     public ResponseEntity deleteShopcart(@Valid @RequestBody shopcartDTO shopcarts){
         int check = shopcartService.deleteshopcart(shopcarts);
         if(check == 0){

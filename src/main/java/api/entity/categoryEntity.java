@@ -23,7 +23,7 @@ public class categoryEntity {
     @Size(min = 5,max = 500)
     private String description;
 
-    @OneToMany(mappedBy = "categoryEntity")
+    @OneToMany(mappedBy = "category" , fetch = FetchType.LAZY)
     private Collection<productsEntity> productsEntities;
 
 
@@ -52,11 +52,4 @@ public class categoryEntity {
     }
 
 
-    public Collection<productsEntity> getProductsEntities() {
-        return productsEntities;
-    }
-
-    public void setProductsEntities(Collection<productsEntity> productsEntities) {
-        this.productsEntities = productsEntities;
-    }
 }

@@ -1,5 +1,6 @@
 package api.DTO;
 
+import api.entity.categoryEntity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -56,7 +57,9 @@ public class productsDTO {
     private Date modifieddate;
 
     @NotNull
-    private long category;
+    private long categoryid;
+
+    private String categoryname;
 
     @Size(min = 1,max = 5)
     private List<imageDTO> listimage = new ArrayList<>();
@@ -182,12 +185,20 @@ public class productsDTO {
         this.modifieddate = modifieddate;
     }
 
-    public long getCategory() {
-        return category;
+    public long getCategoryid() {
+        return categoryid;
     }
 
-    public void setCategory(long category) {
-        this.category = category;
+    public void setCategoryid(long categoryid) {
+        this.categoryid = categoryid;
+    }
+
+    public String getCategoryname() {
+        return categoryname;
+    }
+
+    public void setCategoryname(String categoryname) {
+        this.categoryname = categoryname;
     }
 
     public List<imageDTO> getListimage() {

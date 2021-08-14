@@ -29,7 +29,7 @@ public class categoryService {
     }
 
     public List<categoryEntity> getlistcategory(){
-        List<categoryEntity> list = new ArrayList<>() ;
+        List<categoryEntity> list ;
         list = categoryRepository.findAll();
         return list;
     }

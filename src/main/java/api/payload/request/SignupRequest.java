@@ -16,9 +16,6 @@ public class SignupRequest {
     @Size(min = 4,max = 100)
     private String password;
 
-    @NotBlank
-    @Size(min = 5,max = 100)
-    private String name;
 
     @NotBlank
     @Size(min = 8,max = 50)
@@ -58,14 +55,6 @@ public class SignupRequest {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getEmail() {

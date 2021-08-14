@@ -26,7 +26,6 @@ public class AmazonClient {
     @Autowired
     imageService imageService;
 
-
     private AmazonS3 s3client;
 
     @Value("${amazonProperties.endpointUrl}")

@@ -8,6 +8,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 public class ordersDTO {
 
@@ -40,9 +41,7 @@ public class ordersDTO {
 
     private  long paymentEntity;
 
-    private productsDTO product;
-
-    private int size;
+    private List<orderdetailDTO> listOrderdetail;
 
     public String getId() {
         return id;
@@ -141,19 +140,11 @@ public class ordersDTO {
         this.paymentEntity = paymentEntity;
     }
 
-    public productsDTO getProduct() {
-        return product;
+    public List<orderdetailDTO> getListOrderdetail() {
+        return listOrderdetail;
     }
 
-    public void setProduct(productsDTO product) {
-        this.product = product;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
+    public void setListOrderdetail(List<orderdetailDTO> listOrderdetail) {
+        this.listOrderdetail = listOrderdetail;
     }
 }

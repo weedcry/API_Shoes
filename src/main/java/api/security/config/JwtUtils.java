@@ -30,18 +30,15 @@ public class JwtUtils implements AuthenticationEntryPoint {
     private String jwtExpirationMs;
 
     // tao  jwt tu username,date,expriration , secret
-
     public String generateJwtToken(Authentication authentication) throws ParseException {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         // hạn dùng
-        String dateInString = "30/08/2021";
+        String dateInString = "01/01/2022";
 
         Date date = formatter.parse(dateInString);
-
 //       date =  new Date((new Date()).getTime() + jwtExpirationMs)
-
         return Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date())

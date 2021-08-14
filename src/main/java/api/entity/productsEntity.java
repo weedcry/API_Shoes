@@ -59,7 +59,7 @@ public class productsEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="category_id")
-    private categoryEntity categoryEntity;
+    private categoryEntity category;
 
     @OneToMany(mappedBy = "productsEntity",cascade = CascadeType.ALL)
     private List<imageEntity> imageEntities = new ArrayList<>();
@@ -180,13 +180,6 @@ public class productsEntity {
     }
 
 
-    public api.entity.categoryEntity getCategoryEntity() {
-        return categoryEntity;
-    }
-
-    public void setCategoryEntity(api.entity.categoryEntity categoryEntity) {
-        this.categoryEntity = categoryEntity;
-    }
 
     public List<imageEntity> getImageEntities() {
         return imageEntities;
@@ -202,5 +195,13 @@ public class productsEntity {
 
     public void setProductdetailEntities(List<productdetailEntity> productdetailEntities) {
         this.productdetailEntities = productdetailEntities;
+    }
+
+    public categoryEntity getCategory() {
+        return category;
+    }
+
+    public void setCategory(categoryEntity category) {
+        this.category = category;
     }
 }

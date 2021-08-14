@@ -10,7 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.GeneratedValue;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -47,7 +46,7 @@ public class ordersController {
 
 
     @PostMapping("/create")
-    public ResponseEntity createOrder(@Valid @RequestBody shopcartDTO shopcart){
+    public ResponseEntity createOrder(@Valid @RequestBody List<shopcartDTO> shopcart){
         String username = "";
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {

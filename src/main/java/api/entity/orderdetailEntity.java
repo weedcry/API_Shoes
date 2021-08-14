@@ -23,9 +23,9 @@ public class orderdetailEntity {
     @Min(1)
     private int quantity;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name="order_id")
-    private ordersEntity ordersEntity;
+    private ordersEntity orders;
 
 
     public Long getId() {
@@ -44,12 +44,12 @@ public class orderdetailEntity {
         this.productdetailEntity = productdetailEntity;
     }
 
-    public api.entity.ordersEntity getOrdersEntity() {
-        return ordersEntity;
+    public ordersEntity getOrders() {
+        return orders;
     }
 
-    public void setOrdersEntity(api.entity.ordersEntity ordersEntity) {
-        this.ordersEntity = ordersEntity;
+    public void setOrders(ordersEntity orders) {
+        this.orders = orders;
     }
 
     public int getQuantity() {

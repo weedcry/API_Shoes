@@ -5,8 +5,10 @@ import api.DTO.customersDTO;
 import api.DTO.usersDTO;
 import api.entity.customersEntity;
 import api.entity.usersEntity;
+import api.payload.response.MessageResponse;
 import api.repository.customersRepository;
 import api.repository.usersRepository;
+import com.restfb.types.User;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,8 +20,11 @@ import org.springframework.stereotype.Service;
 public class customersService {
     @Autowired
     customersRepository customersRepository;
+
     @Autowired
     usersService usersService;
+
+    @Autowired
     PasswordEncoder encoder;
 
     @Autowired
@@ -43,11 +48,13 @@ public class customersService {
 
     public customersDTO getcustomers(String username){
         customersEntity customersEntity = customersRepository.findByUsers_id(username);
+        usersEntity user = usersRepository.finduser(username);
         customersDTO customersDTO = null;
         if(customersEntity == null){
             return customersDTO;
         }
          customersDTO = mapper.map(customersEntity, api.DTO.customersDTO.class);
+        customersDTO.setEmail(user.getEmail());
         return customersDTO;
     }
 
@@ -55,12 +62,34 @@ public class customersService {
     public customersDTO updatecustomer(customersDTO customerDTO,String username){
 //        usersDTO usersDTO = usersService.getusers(username);
         usersEntity usersEntity = usersRepository.finduser(username);
+        String email = usersEntity.getEmail();
         customersEntity customersEntity = mapper.map(customerDTO, api.entity.customersEntity.class);
         customersEntity.setUsersEntitys(usersEntity);
         customersRepository.save(customersEntity);
         return customerDTO;
     }
 
+    public int checkpassword(String username,String pass){
+        boolean result = false;
+        try {
+            usersEntity user = usersRepository.finduser(username);
+            result = encoder.matches(pass,user.getPassword());
+        }catch (Exception e){
+        }
+        if(result){
+            return 1;
+        }
+        return 0;
+    }
 
+    public Object changepassword(String username,String newpass){
+        try {
+            usersEntity user = usersRepository.finduser(username);
+            user.setPassword(encoder.encode(newpass));
+        }catch (Exception e){
+        }
+        MessageResponse mes = new MessageResponse("success");
+        return mes;
+    }
 
 }

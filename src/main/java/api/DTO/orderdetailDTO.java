@@ -24,8 +24,7 @@ public class orderdetailDTO {
     @NotBlank
     private long productid;
 
-    @NotBlank
-    private String orderid;
+
 
     public Long getId() {
         return id;
@@ -59,11 +58,4 @@ public class orderdetailDTO {
         this.productid = productid;
     }
 
-    public String getOrderid() {
-        return orderid;
-    }
-
-    public void setOrderid(String orderid) {
-        this.orderid = orderid;
-    }
 }

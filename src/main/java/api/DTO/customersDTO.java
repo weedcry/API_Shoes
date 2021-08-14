@@ -2,22 +2,24 @@ package api.DTO;
 
 import org.hibernate.validator.constraints.NotBlank;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 
 public class customersDTO {
 
     private long id;
-
     @NotBlank
     private String firstname;
-
     @NotBlank
     private String lastname;
-
     @NotBlank
     private String address;
-
     @NotBlank
+    @Size(max = 10,min = 9)
     private String phone;
+    @NotBlank
+    private String email;
 
     private String avatar;
 
@@ -68,5 +70,13 @@ public class customersDTO {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,31 +41,48 @@ public class ordersService {
     productdetailRepository productdetailRepository;
 
 
-
-
-    public List getListOrderCustomer(String userid){
+    public List<ordersDTO> getListOrderCustomer(String userid){
         customersEntity customers = customersRepository.findByUsers_id(userid);
         List<ordersDTO> list = ordersRepository.findListOrderCustomer(customers.getId()).stream().map(
                 ordersEntity -> {
-                    orderdetailEntity  orderdetail  =  orderdetailRepository.findOrderdetail(ordersEntity.getId());
+//                    orderdetailEntity  orderdetail  =  orderdetailRepository.findOrderdetail(ordersEntity.getId());
                     ordersDTO orders = modelMapper.map(ordersEntity,ordersDTO.class);
-                    orders.setSize(orderdetail.getProductdetailEntity().getSize());
-                    orders.setProduct(parseProductDTO(orderdetail.getProductdetailEntity().getProductsEntity()));
 //                    orders.setPaymentEntity(ordersEntity.getPaymentEntity().getId());
+
+                    // orderdetail dto
+                    List<orderdetailDTO> listOrderdetailDTO = ordersEntity.getOrderdetailEntities().stream().map(
+                            orderdetailEntity -> {
+                                orderdetailDTO orderdetailDTO = modelMapper.map(orderdetailEntity, api.DTO.orderdetailDTO.class);
+                                orderdetailDTO.setProductid(orderdetailEntity.getProductdetailEntity().
+                                        getProductsEntity().getId());
+                                orderdetailDTO.setSize(orderdetailEntity.getProductdetailEntity().getSize());
+                                return  orderdetailDTO;
+                            }
+                    ).collect(Collectors.toList());
+                    orders.setListOrderdetail(listOrderdetailDTO);
                     return orders;
                 }
         ).collect(Collectors.toList());
         return list;
     }
 
-    public List getListOrderAdmin(){
+    public List<ordersDTO> getListOrderAdmin(){
         List<ordersDTO> list = ordersRepository.findAll().stream().map(
                 ordersEntity -> {
                     orderdetailEntity  orderdetail  =  orderdetailRepository.findOrderdetail(ordersEntity.getId());
                     ordersDTO orders = modelMapper.map(ordersEntity,ordersDTO.class);
-                    orders.setSize(orderdetail.getProductdetailEntity().getSize());
-                    orders.setProduct(parseProductDTO(orderdetail.getProductdetailEntity().getProductsEntity()));
 //                    orders.setPaymentEntity(ordersEntity.getPaymentEntity().getId());
+
+                    // orderdetail dto
+                    List<orderdetailDTO> listOrderdetailDTO = ordersEntity.getOrderdetailEntities().stream().map(
+                            orderdetailEntity -> {
+                                orderdetailDTO orderdetailDTO = modelMapper.map(orderdetailEntity, api.DTO.orderdetailDTO.class);
+                                orderdetailDTO.setProductid(orderdetailEntity.getProductdetailEntity().
+                                        getProductsEntity().getId());
+                                return  orderdetailDTO;
+                            }
+                    ).collect(Collectors.toList());
+                    orders.setListOrderdetail(listOrderdetailDTO);
                     return orders;
                 }
         ).collect(Collectors.toList());
@@ -73,43 +91,60 @@ public class ordersService {
 
 
 
-    public boolean createOrders(shopcartDTO shopcartDTO,String username){
-        shopcartEntity shopcart = shopcartRepository.findById(shopcartDTO.getId());
-        if(shopcart == null || !shopcart.getCustomers().getUsersEntitys().getUsername().equals(username)){
-            return false;
+    public boolean createOrders(List<shopcartDTO> listshopcartDTO,String username){
+        customersEntity customersEntity = customersRepository.findByUsers_id(username);
+        List<orderdetailEntity> listOrderDetail = new ArrayList<>();
+        float total = 0;
+        for (shopcartDTO shopcartDTO :listshopcartDTO) {
+            shopcartEntity shopcart = shopcartRepository.findById(shopcartDTO.getId());
+            if(shopcart == null || !shopcart.getCustomers().getUsersEntitys().getUsername().equals(username)){
+                return false;
+            }
+
+            //price
+            float price = (shopcart.getProductdetail().getProductsEntity().getPrice()*shopcart.getQuantity());
+            if(shopcart.getProductdetail().getProductsEntity().getDiscountEntitys() != null){
+                float discount = price * shopcart.getProductdetail().getProductsEntity().getDiscountEntitys().getPercent();
+                price -= discount;
+            }
+            total += price;
+            shopcartRepository.delete(shopcart);
+
+            //create orderdetail
+            orderdetailEntity  orderdetail = new orderdetailEntity();
+            orderdetail.setProductdetailEntity(shopcart.getProductdetail());
+            orderdetail.setQuantity(shopcart.getQuantity());
+            listOrderDetail.add(orderdetail);
         }
 
         //create order
+        // id
         Date date = new Date();
+        String id = customersEntity.getUsersEntitys().getUsername().substring(0,2)+
+                String.valueOf(customersEntity.getId())+date.getTime();
+
         ordersEntity ordersEntity = new ordersEntity();
-        String id =shopcart.getCustomers().getUsersEntitys().getUsername().substring(0,2)+
-                String.valueOf(shopcart.getCustomers().getId())+date.getTime();
         ordersEntity.setId(id);
-        ordersEntity.setAddress(shopcart.getCustomers().getAddress());
+        ordersEntity.setAddress(customersEntity.getAddress());
         ordersEntity.setCreatedDate(date);
-        ordersEntity.setEmail(shopcart.getCustomers().getUsersEntitys().getEmail());
-        ordersEntity.setFullname(shopcart.getCustomers().getLastname() +" "+shopcart.getCustomers().getFirstname());
-        ordersEntity.setPhone(shopcart.getCustomers().getPhone());
+        ordersEntity.setEmail(customersEntity.getUsersEntitys().getEmail());
+        ordersEntity.setFullname(customersEntity.getLastname() +" "+customersEntity.getFirstname());
+        ordersEntity.setPhone(customersEntity.getPhone());
         ordersEntity.setStatus(api.entity.ordersEntity.Status.UNCONFIRM);
-        ordersEntity.setCustomersEntity(shopcart.getCustomers());
+        ordersEntity.setCustomersEntity(customersEntity);
 //        ordersEntity.setPaymentEntity();
-
-        float total = (shopcart.getProductdetail().getProductsEntity().getPrice()*shopcart.getQuantity());
-        if(shopcart.getProductdetail().getProductsEntity().getDiscountEntitys() != null){
-            float discount = total * shopcart.getProductdetail().getProductsEntity().getDiscountEntitys().getPercent();
-            total -= discount;
-        }
         ordersEntity.setTotal(total);
-        ordersEntity orders =  ordersRepository.save(ordersEntity);
+//        ordersEntity.setOrderdetailEntities(listOrderDetail);
+        final ordersEntity finalOrder =  ordersRepository.save(ordersEntity);
 
-        //create orderdetail
-        orderdetailEntity  orderdetail = new orderdetailEntity();
-        orderdetail.setProductdetailEntity(shopcart.getProductdetail());
-        orderdetail.setOrdersEntity(orders);
-        orderdetail.setQuantity(shopcartDTO.getQuantity());
-        orderdetailRepository.save(orderdetail);
-        shopcartRepository.delete(shopcart);
+        // cascade type ALl not working , i will fix
+        for (orderdetailEntity order : listOrderDetail) {
+            order.setOrders(finalOrder);
+            orderdetailRepository.save(order);
+        }
         return true;
+
+
     }
 
     public Boolean cancelOrder(ordersDTO orderDTO){
@@ -165,7 +200,8 @@ public class ordersService {
                     return  imageDTO;
                 }
         ).collect(Collectors.toList());;
-        productDTO.setCategory(productsEntity.getCategoryEntity().getId());
+        productDTO.setCategoryid(productsEntity.getCategory().getId());
+        productDTO.setCategoryname(productsEntity.getCategory().getName());
         productDTO.setListimage(listimage);
         productDTO.setListsize(listproductdetail);
         return productDTO;

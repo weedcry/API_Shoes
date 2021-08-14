@@ -5,8 +5,10 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name="orders")
@@ -45,6 +47,9 @@ public class ordersEntity {
 
     private Date modifiedDate;
 
+    @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL)
+    private List<orderdetailEntity> orderdetailEntities = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name ="customer_id")
     private customersEntity customersEntity;
@@ -52,9 +57,6 @@ public class ordersEntity {
     @ManyToOne
     @JoinColumn(name="payment_id")
     private paymentEntity paymentEntity;
-
-    @OneToMany(mappedBy = "ordersEntity", cascade = CascadeType.ALL)
-    private Collection<orderdetailEntity> orderdetailEntities;
 
     public String getId() {
         return id;
@@ -160,11 +162,11 @@ public class ordersEntity {
         this.paymentEntity = paymentEntity;
     }
 
-    public Collection<orderdetailEntity> getOrderdetailEntities() {
+    public List<orderdetailEntity> getOrderdetailEntities() {
         return orderdetailEntities;
     }
 
-    public void setOrderdetailEntities(Collection<orderdetailEntity> orderdetailEntities) {
+    public void setOrderdetailEntities(List<orderdetailEntity> orderdetailEntities) {
         this.orderdetailEntities = orderdetailEntities;
     }
 }
