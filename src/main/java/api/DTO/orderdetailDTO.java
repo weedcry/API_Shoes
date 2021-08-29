@@ -24,7 +24,8 @@ public class orderdetailDTO {
     @NotBlank
     private long productid;
 
-
+    @NotNull
+    private float price;
 
     public Long getId() {
         return id;
@@ -58,4 +59,11 @@ public class orderdetailDTO {
         this.productid = productid;
     }
 
+    public float getPrice() {
+        return price;
+    }
+
+    public void setPrice(float price) {
+        this.price = price;
+    }
 }

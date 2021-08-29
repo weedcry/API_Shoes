@@ -39,7 +39,7 @@ public class ordersDTO {
 
     private Date modifiedDate;
 
-    private  long paymentEntity;
+    private  paymentEntity paymentEntity;
 
     private List<orderdetailDTO> listOrderdetail;
 
@@ -131,12 +131,11 @@ public class ordersDTO {
         this.modifiedDate = modifiedDate;
     }
 
-
-    public long getPaymentEntity() {
+    public api.entity.paymentEntity getPaymentEntity() {
         return paymentEntity;
     }
 
-    public void setPaymentEntity(long paymentEntity) {
+    public void setPaymentEntity(api.entity.paymentEntity paymentEntity) {
         this.paymentEntity = paymentEntity;
     }
 

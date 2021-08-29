@@ -61,11 +61,16 @@ public class productsEntity {
     @JoinColumn(name ="category_id")
     private categoryEntity category;
 
+    @OneToMany(mappedBy = "products",fetch = FetchType.LAZY)
+    private Collection<wishlistEntity> wishlistEntities ;
+
     @OneToMany(mappedBy = "productsEntity",cascade = CascadeType.ALL)
     private List<imageEntity> imageEntities = new ArrayList<>();
 
     @OneToMany(mappedBy = "productsEntity",cascade = CascadeType.ALL)
     private List<productdetailEntity> productdetailEntities = new ArrayList<>();;
+
+
 
     public long getId() {
         return id;
@@ -178,8 +183,6 @@ public class productsEntity {
     public void setModifieddate(Date modifieddate) {
         this.modifieddate = modifieddate;
     }
-
-
 
     public List<imageEntity> getImageEntities() {
         return imageEntities;

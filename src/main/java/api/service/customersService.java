@@ -47,7 +47,7 @@ public class customersService {
 
 
     public customersDTO getcustomers(String username){
-        customersEntity customersEntity = customersRepository.findByUsers_id(username);
+        customersEntity customersEntity = customersRepository.findByUsername(username);
         usersEntity user = usersRepository.finduser(username);
         customersDTO customersDTO = null;
         if(customersEntity == null){
@@ -60,9 +60,7 @@ public class customersService {
 
 
     public customersDTO updatecustomer(customersDTO customerDTO,String username){
-//        usersDTO usersDTO = usersService.getusers(username);
         usersEntity usersEntity = usersRepository.finduser(username);
-        String email = usersEntity.getEmail();
         customersEntity customersEntity = mapper.map(customerDTO, api.entity.customersEntity.class);
         customersEntity.setUsersEntitys(usersEntity);
         customersRepository.save(customersEntity);

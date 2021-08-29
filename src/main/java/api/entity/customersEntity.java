@@ -14,19 +14,15 @@ public class customersEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @NotBlank
     @Size(min = 2,max = 50)
     private String firstname;
 
-    @NotBlank
     @Size(min = 2,max = 50)
     private String lastname;
 
-    @NotBlank
     @Size(min = 3,max = 200)
     private String address;
 
-    @NotBlank
     @Size(min = 9,max = 10)
     private String phone;
 
@@ -38,6 +34,9 @@ public class customersEntity {
 
     @OneToMany(mappedBy = "customersEntity")
     private Collection<ordersEntity> ordersEntities;
+
+    @OneToMany(mappedBy = "customers")
+    private Collection<wishlistEntity> wishlistEntities;
 
     @OneToMany(mappedBy = "customers")
     private Collection<shopcartEntity> customersproducts;

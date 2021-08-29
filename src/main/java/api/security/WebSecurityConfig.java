@@ -64,11 +64,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers("/api/product/page/**").permitAll()
+                .antMatchers("/api/product/id/**").permitAll()
+                .antMatchers("/api/category/get").permitAll()
+                .antMatchers("/api/discount/get").permitAll()
+                .antMatchers("/api/payment/**").permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated();
 
 
-        // Cấu hình cho Login Form.
         http.authorizeRequests().and().formLogin()//
                 .loginProcessingUrl("/j_spring_security_login")//
                 .loginPage("/login")//
@@ -76,20 +79,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .failureUrl("/login?message=error")//
                 .usernameParameter("username")//
                 .passwordParameter("password")
-                // Cấu hình cho Logout Page.
                 .and().logout().logoutUrl("/j_spring_security_logout").logoutSuccessUrl("/login?message=logout");
 
-        //login google
-        // approve ADMIN or USER
-//        http.authorizeRequests().antMatchers("/admin/**").access("hasRole('ADMIN')");
-        // approve ADMIN or USER
-//        http.authorizeRequests().antMatchers("/user/**").access("hasRole('ADMIN') or hasRole('USER')");
-
-
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-
-
 
     }
 }

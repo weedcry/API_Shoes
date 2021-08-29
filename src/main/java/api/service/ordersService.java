@@ -5,12 +5,18 @@ import api.entity.*;
 import api.repository.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,12 +46,22 @@ public class ordersService {
     @Autowired
     productdetailRepository productdetailRepository;
 
+    @Autowired
+    paymentRepository paymentRepository;
+
+    @Autowired
+    api.service.sendMailService sendMailService;
+
 
     public List<ordersDTO> getListOrderCustomer(String userid){
-        customersEntity customers = customersRepository.findByUsers_id(userid);
-        List<ordersDTO> list = ordersRepository.findListOrderCustomer(customers.getId()).stream().map(
+        List<ordersDTO> list = new ArrayList<>();
+        customersEntity customers = customersRepository.findByUsername(userid);
+        if(customers == null){
+            return list;
+        }
+
+        list = ordersRepository.findListOrderCustomer(customers.getId()).stream().map(
                 ordersEntity -> {
-//                    orderdetailEntity  orderdetail  =  orderdetailRepository.findOrderdetail(ordersEntity.getId());
                     ordersDTO orders = modelMapper.map(ordersEntity,ordersDTO.class);
 //                    orders.setPaymentEntity(ordersEntity.getPaymentEntity().getId());
 
@@ -66,36 +82,57 @@ public class ordersService {
         return list;
     }
 
-    public List<ordersDTO> getListOrderAdmin(){
-        List<ordersDTO> list = ordersRepository.findAll().stream().map(
-                ordersEntity -> {
-                    orderdetailEntity  orderdetail  =  orderdetailRepository.findOrderdetail(ordersEntity.getId());
-                    ordersDTO orders = modelMapper.map(ordersEntity,ordersDTO.class);
-//                    orders.setPaymentEntity(ordersEntity.getPaymentEntity().getId());
+    public ResultPageOrder getListOrderPageAdmin(int page, int size, Optional<String> title,
+                                                 String typeSort, String orderBy, Optional<String> type ){
+        ResultPageOrder resultPage = new ResultPageOrder();
+        Pageable pageable  ;
+        Page<ordersEntity> Result ;
+        ordersEntity.Status  status ;
+        if(ordersEntity.Status.UNCONFIRM.toString().equals(type.get())){
+            status = ordersEntity.Status.UNCONFIRM;
+        }else if(ordersEntity.Status.CANCEL.toString().equals(type.get())){
+            status = ordersEntity.Status.CANCEL;
+        }
+        else if(ordersEntity.Status.DELIVERING.toString().equals(type.get())){
+            status = ordersEntity.Status.DELIVERING;
+        }else{
+            status = ordersEntity.Status.DELIVERED;
+        }
 
-                    // orderdetail dto
-                    List<orderdetailDTO> listOrderdetailDTO = ordersEntity.getOrderdetailEntities().stream().map(
-                            orderdetailEntity -> {
-                                orderdetailDTO orderdetailDTO = modelMapper.map(orderdetailEntity, api.DTO.orderdetailDTO.class);
-                                orderdetailDTO.setProductid(orderdetailEntity.getProductdetailEntity().
-                                        getProductsEntity().getId());
-                                return  orderdetailDTO;
-                            }
-                    ).collect(Collectors.toList());
-                    orders.setListOrderdetail(listOrderdetailDTO);
-                    return orders;
-                }
-        ).collect(Collectors.toList());
-        return list;
+        if(title.isPresent()){ //
+            Sort sort;
+            if(orderBy.toUpperCase().equals("DESC")){
+                sort  = new Sort(Sort.Direction.DESC, typeSort);
+            }else{
+                sort = new Sort(Sort.Direction.ASC, typeSort);
+            }
+
+            pageable = new PageRequest(page - 1,size,sort);
+            Result = ordersRepository.findByIdAndStatus(title.get(),status,pageable);
+        }else{ // all
+            Sort sort;
+            if(orderBy.toUpperCase().equals("DESC")){
+                sort  = new Sort(Sort.Direction.DESC, typeSort);
+            }else{
+                sort = new Sort(Sort.Direction.ASC, typeSort);
+            }
+            pageable = new PageRequest(page - 1,size,sort);
+            Result = ordersRepository.findByStatus(status,pageable);
+        }
+
+        resultPage.setPage(Result.getNumber()  + 1 );
+        resultPage.setListResult( parseListOrderDTO(Result.getContent()));
+        resultPage.setTotalpage(Result.getTotalPages());
+        return resultPage;
     }
 
 
 
-    public boolean createOrders(List<shopcartDTO> listshopcartDTO,String username){
+    public boolean createOrders(infoOrderDTO infoOrder,String username){
         customersEntity customersEntity = customersRepository.findByUsers_id(username);
         List<orderdetailEntity> listOrderDetail = new ArrayList<>();
         float total = 0;
-        for (shopcartDTO shopcartDTO :listshopcartDTO) {
+        for (shopcartDTO shopcartDTO : infoOrder.getShopcart()) {
             shopcartEntity shopcart = shopcartRepository.findById(shopcartDTO.getId());
             if(shopcart == null || !shopcart.getCustomers().getUsersEntitys().getUsername().equals(username)){
                 return false;
@@ -110,10 +147,20 @@ public class ordersService {
             total += price;
             shopcartRepository.delete(shopcart);
 
+            // inventory product
+            productdetailEntity productdetail = productdetailRepository.findById(shopcartDTO.getProductdetail().getId());
+            if(productdetail.getInventory() == 0){
+                return false;
+            }
+            long valueNew = productdetail.getInventory() - shopcartDTO.getQuantity();
+            productdetail.setInventory(valueNew);
+            productdetailRepository.save(productdetail);
+
             //create orderdetail
             orderdetailEntity  orderdetail = new orderdetailEntity();
             orderdetail.setProductdetailEntity(shopcart.getProductdetail());
             orderdetail.setQuantity(shopcart.getQuantity());
+            orderdetail.setPrice(price);
             listOrderDetail.add(orderdetail);
         }
 
@@ -125,14 +172,14 @@ public class ordersService {
 
         ordersEntity ordersEntity = new ordersEntity();
         ordersEntity.setId(id);
-        ordersEntity.setAddress(customersEntity.getAddress());
+        ordersEntity.setAddress(infoOrder.getAddress());
         ordersEntity.setCreatedDate(date);
-        ordersEntity.setEmail(customersEntity.getUsersEntitys().getEmail());
-        ordersEntity.setFullname(customersEntity.getLastname() +" "+customersEntity.getFirstname());
-        ordersEntity.setPhone(customersEntity.getPhone());
+        ordersEntity.setEmail(infoOrder.getEmail());
+        ordersEntity.setFullname(infoOrder.getFullname());
+        ordersEntity.setPhone(infoOrder.getPhone());
         ordersEntity.setStatus(api.entity.ordersEntity.Status.UNCONFIRM);
         ordersEntity.setCustomersEntity(customersEntity);
-//        ordersEntity.setPaymentEntity();
+        ordersEntity.setPaymentEntity(paymentRepository.findById(infoOrder.getPaymentid()));
         ordersEntity.setTotal(total);
 //        ordersEntity.setOrderdetailEntities(listOrderDetail);
         final ordersEntity finalOrder =  ordersRepository.save(ordersEntity);
@@ -142,72 +189,97 @@ public class ordersService {
             order.setOrders(finalOrder);
             orderdetailRepository.save(order);
         }
+
+        try {
+            sendMailService.sendHtmlEmail(finalOrder.getEmail(),"Đơn Hàng "+finalOrder.getCreatedDate(),finalOrder);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+
+
         return true;
-
-
     }
 
-    public Boolean cancelOrder(ordersDTO orderDTO){
+    public Boolean cancelOrder(ordersDTO orderDTO,String username){
         ordersEntity order = ordersRepository.findById(orderDTO.getId());
         if(order == null){
             return false;
+        }
+
+        for (orderdetailEntity orderdetail : order.getOrderdetailEntities())
+        {
+            // inventory product
+            productdetailEntity productdetail = orderdetail.getProductdetailEntity();
+            long valueNew = productdetail.getInventory() + orderdetail.getQuantity();
+            productdetail.setInventory(valueNew);
+            productdetailRepository.save(productdetail);
         }
 
         // cancel order
         order.setStatus(ordersEntity.Status.CANCEL);
+        order.setModifiedDate(new Date());
+        order.setModifiedBy(username);
         ordersRepository.save(order);
         return true;
     }
 
-    public Boolean acceptOrder(ordersDTO orderDTO){
+    public Boolean acceptOrder(ordersDTO orderDTO,String username){
         ordersEntity order = ordersRepository.findById(orderDTO.getId());
         if(order == null){
             return false;
         }
 
-        // cancel order
+        for (orderdetailEntity orderdetail : order.getOrderdetailEntities())
+        {
+            // inventory product
+            productsEntity productsEntity = orderdetail.getProductdetailEntity().getProductsEntity();
+            int valueNew = productsEntity.getRating() + orderdetail.getQuantity();
+            productsEntity.setRating(valueNew);
+            productsRepository.save(productsEntity);
+        }
+        // accept order
         order.setStatus(ordersEntity.Status.DELIVERING);
+        order.setModifiedDate(new Date());
+        order.setModifiedBy(username);
         ordersRepository.save(order);
         return true;
     }
 
-    public Boolean confirmOrder(ordersDTO orderDTO){
+    public Boolean confirmOrder(ordersDTO orderDTO,String username){
         ordersEntity order = ordersRepository.findById(orderDTO.getId());
         if(order == null){
             return false;
         }
-
-        // cancel order
+        // confirm order
         order.setStatus(ordersEntity.Status.DELIVERED);
+        order.setModifiedDate(new Date());
+        order.setModifiedBy(username);
         ordersRepository.save(order);
         return true;
     }
 
 
-    public productsDTO parseProductDTO(productsEntity productsEntity){
-        productsDTO productDTO = modelMapper.map(productsEntity,productsDTO.class);
-        List<productdetailDTO> listproductdetail = productdetailRepository.findByProductid(productDTO.getId()).stream().map(
-                productdetailEntity -> {
-                    productdetailDTO productdetail = modelMapper.map(productdetailEntity,productdetailDTO.class);
-                    productdetail.setProductid(productdetailEntity.getProductsEntity().getId());
-                    return  productdetail;
+    public  List<ordersDTO> parseListOrderDTO(List<ordersEntity> listOrder){
+        List<ordersDTO> list = listOrder.stream().map(
+                ordersEntity -> {
+                    ordersDTO orders = modelMapper.map(ordersEntity,ordersDTO.class);
+//                    orders.setPaymentEntity(ordersEntity.getPaymentEntity().getId());
+                    // orderdetail dto
+                    List<orderdetailDTO> listOrderdetailDTO = ordersEntity.getOrderdetailEntities().stream().map(
+                            orderdetailEntity -> {
+                                orderdetailDTO orderdetailDTO = modelMapper.map(orderdetailEntity, api.DTO.orderdetailDTO.class);
+                                orderdetailDTO.setProductid(orderdetailEntity.getProductdetailEntity().
+                                        getProductsEntity().getId());
+                                orderdetailDTO.setSize(orderdetailEntity.getProductdetailEntity().getSize());
+                                return  orderdetailDTO;
+                            }
+                    ).collect(Collectors.toList());
+                    orders.setListOrderdetail(listOrderdetailDTO);
+                    return orders;
                 }
         ).collect(Collectors.toList());
-        List<imageDTO> listimage = imageRepository.findByProductid(productDTO.getId()).stream().map(
-                imageEntity -> {
-                    imageDTO imageDTO = modelMapper.map(imageEntity, api.DTO.imageDTO.class);
-                    imageDTO.setProductid(imageEntity.getProductsEntity().getId());
-                    return  imageDTO;
-                }
-        ).collect(Collectors.toList());;
-        productDTO.setCategoryid(productsEntity.getCategory().getId());
-        productDTO.setCategoryname(productsEntity.getCategory().getName());
-        productDTO.setListimage(listimage);
-        productDTO.setListsize(listproductdetail);
-        return productDTO;
+        return list;
     }
-
-
 
 
 }

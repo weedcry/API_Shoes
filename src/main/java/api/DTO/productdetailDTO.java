@@ -14,6 +14,8 @@ public class productdetailDTO {
     @Min(35)
     private int size;
 
+    private long inventory;
+
 
     public long getId() {
         return id;
@@ -37,5 +39,13 @@ public class productdetailDTO {
 
     public void setSize(int size) {
         this.size = size;
+    }
+
+    public long getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(long inventory) {
+        this.inventory = inventory;
     }
 }

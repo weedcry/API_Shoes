@@ -14,16 +14,15 @@ public class paymentEntity {
 
     private String url;
 
-    @OneToMany(mappedBy = "paymentEntity")
-    private Collection<ordersEntity> ordersEntities;
+//    @OneToOne(mappedBy = "paymentEntity")
+//    private Collection<ordersEntity> ordersEntities;
 
     public paymentEntity(){}
 
-    public paymentEntity(Long id, String name, String url, Collection<ordersEntity> ordersEntities) {
+    public paymentEntity(Long id, String name, String url) {
         this.id = id;
         this.name = name;
         this.url = url;
-        this.ordersEntities = ordersEntities;
     }
 
     public Long getId() {
@@ -50,11 +49,4 @@ public class paymentEntity {
         this.url = url;
     }
 
-    public Collection<ordersEntity> getOrdersEntities() {
-        return ordersEntities;
-    }
-
-    public void setOrdersEntities(Collection<ordersEntity> ordersEntities) {
-        this.ordersEntities = ordersEntities;
-    }
 }

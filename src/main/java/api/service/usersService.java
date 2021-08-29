@@ -51,19 +51,9 @@ public class usersService implements UserDetailsService {
             return usersDTO;
         }
         usersDTO = mapper.map(user, api.DTO.usersDTO.class);
-//        usersDTO.setRolename(user.getRoles().);
+
+        usersDTO.setRolename(user.getRoles());
         return  usersDTO;
     }
-
-    public usersEntity createuser(usersDTO userdto){
-        roleEntity role =  roleRepository.find1(userdto.getRolename());
-        usersEntity usersEntity = new usersEntity();
-        usersEntity = mapper.map(userdto, usersEntity.getClass());
-//        usersEntity.setRoleEntitys(role);
-        usersRepository.save(usersEntity);
-        return usersEntity;
-    }
-
-
 
 }

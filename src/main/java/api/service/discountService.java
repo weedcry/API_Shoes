@@ -33,5 +33,14 @@ public class discountService {
         return discount;
     }
 
+    public discountEntity updateDiscount(discountEntity discountEntitys){
+        discountEntity discount = null;
+        if(discountRepository.existsById(discountEntitys.getId())){
+            discount = discountRepository.save(discountEntitys);
+            return discount;
+        }
+        return discount;
+    }
+
 
 }

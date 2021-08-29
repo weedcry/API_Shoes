@@ -50,9 +50,8 @@ public class shopcartService {
                     productdetailDTO.setId(shopcartEntity.getProductdetail().getId());
                     productdetailDTO.setProductid(shopcartEntity.getProductdetail().getProductsEntity().getId());
                     productdetailDTO.setSize(shopcartEntity.getProductdetail().getSize());
+                    productdetailDTO.setInventory(shopcartEntity.getProductdetail().getInventory());
                     shopcartsDTO.setProductdetail(productdetailDTO);
-//                    shopcartsDTO.setProductsid(shopcartEntity.getProducts().getId());
-//                    shopcartsDTO.setSize(shopcartEntity.getSize());
                     return shopcartsDTO;
                 }
 

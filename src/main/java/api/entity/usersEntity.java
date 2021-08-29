@@ -33,7 +33,7 @@ public class usersEntity {
     @Size(min = 5,max = 100)
     private String name;
 
-    @NotBlank
+
     @Size(max = 50)
     @Email
     private String email;

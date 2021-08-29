@@ -1,9 +1,11 @@
 package api.DTO;
 
+import api.entity.roleEntity;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.constraints.Size;
+import java.util.Set;
 
 public class usersDTO {
 
@@ -26,17 +28,8 @@ public class usersDTO {
 
     @NotBlank
     @Size(min = 2,max = 10)
-    private String rolename;
+    private Set<roleEntity> rolename;
 
-    public usersDTO(){}
-
-    public usersDTO(String username, String password, String name, String email, String rolename) {
-        this.username = username;
-        this.password = password;
-        this.name = name;
-        this.email = email;
-        this.rolename = rolename;
-    }
 
     public String getUsername() {
         return username;
@@ -70,11 +63,11 @@ public class usersDTO {
         this.email = email;
     }
 
-    public String getRolename() {
+    public Set<roleEntity> getRolename() {
         return rolename;
     }
 
-    public void setRolename(String rolename) {
+    public void setRolename(Set<roleEntity> rolename) {
         this.rolename = rolename;
     }
 }

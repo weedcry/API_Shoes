@@ -23,6 +23,9 @@ public class orderdetailEntity {
     @Min(1)
     private int quantity;
 
+    @NotNull
+    private float price;
+
     @ManyToOne
     @JoinColumn(name="order_id")
     private ordersEntity orders;
@@ -60,4 +63,11 @@ public class orderdetailEntity {
         this.quantity = quantity;
     }
 
+    public float getPrice() {
+        return price;
+    }
+
+    public void setPrice(float price) {
+        this.price = price;
+    }
 }

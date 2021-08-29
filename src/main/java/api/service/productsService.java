@@ -15,11 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-
-import java.sql.Time;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,6 +45,12 @@ public class productsService {
     @Autowired
     discountService discountService;
 
+    @Autowired
+    usersRepository usersRepository;
+
+    @Autowired
+    customersRepository customersRepository;
+
 
     public productsDTO saveproducts(productsDTO productDTO,String username){
         if(!categoryService.checkid(productDTO.getCategoryid())){
@@ -61,8 +63,6 @@ public class productsService {
             productsEntitys.setCreateddate(new Date());
             productsEntitys.setCreatedby(username);
         }else {
-            // list image
-            // list size
             productDTO.setColor(productDTO.getColor());
             productsEntitys.setPrice(productDTO.getPrice());
             productsEntitys.setModifiedby(productDTO.getModifiedby());
@@ -72,9 +72,10 @@ public class productsService {
             productsEntitys.setDiscountEntitys(discountService.getDiscount(productDTO.getDiscount()));
             productsEntitys.setDeadline(productDTO.getDeadline());
             productsEntitys.setName(productDTO.getName());
+            productsEntitys.setColor(productDTO.getColor());
             productsEntitys.setModifieddate(new Date());
             productsEntitys.setModifiedby(username);
-            if(productsEntity.Status.ACTIVE.equals(productDTO.getStatus())){
+            if(productsEntity.Status.ACTIVE.toString().equals(productDTO.getStatus())){
                 productsEntitys.setStatus(productsEntity.Status.ACTIVE);
             }else{
                 productsEntitys.setStatus(productsEntity.Status.INACTIVE);
@@ -91,12 +92,10 @@ public class productsService {
                     return image;
                 }
         ).collect(Collectors.toList());
-
         // discount
          discountEntity discount = discountRepository.findById(productDTO.getDiscount());
         if(discount != null){
             productsEntitys.setDiscountEntitys(discount);
-
         }
         //category
         categoryEntity  category = categoryService.findOnecategory(productDTO.getCategoryid());
@@ -114,32 +113,19 @@ public class productsService {
         productsEntitys.setProductdetailEntities(productdetail);
         //create product
         productsRepository.save(productsEntitys);
-
         productsDTO pro = parseProductDTO(productsEntitys);
         return  pro;
     }
 
 
-
-    public List getListProductsActive(){
-        List<productsDTO> list = productsRepository.getlistproductactive().stream().map(
-                productsEntity -> {
-                    productsDTO productDTO = modelMapper.map(productsEntity,productsDTO.class);
-                    return productDTO;
-                }
-        ).collect(Collectors.toList());
-
-        return  list;
-    }
-
     public productsDTO getproduct(long id){
+        productsDTO productDTO = null;
         productsEntity productsEntity = productsRepository.findById(id);
-        productsDTO productDTO = parseProductDTO(productsEntity);
+        if(productsEntity == null){
+            return  productDTO;
+        }
+        productDTO = parseProductDTO(productsEntity);
         return productDTO;
-    }
-
-    public int totalpage(){
-        return (int) productsRepository.count();
     }
 
 
@@ -170,7 +156,10 @@ public class productsService {
                     imageDTO.setProductid(imageEntity.getProductsEntity().getId());
                     return  imageDTO;
                 }
-        ).collect(Collectors.toList());;
+        ).collect(Collectors.toList());
+        if(productsEntity.getDiscountEntitys() != null){
+            productDTO.setDiscount(productsEntity.getDiscountEntitys().getId());
+        }
         productDTO.setCategoryid(productsEntity.getCategory().getId());
         productDTO.setCategoryname(productsEntity.getCategory().getName());
         productDTO.setListimage(listimage);
@@ -178,10 +167,22 @@ public class productsService {
         return productDTO;
     }
 
-    public ResultPage productPagination(int page, int size, String typeSort, Long categoryId ,  String orderBy ){
+    public  boolean isNumeric(String str) {
+        return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
+    }
+
+    public ResultPage productPagination(int page, int size, String typeSort, Long categoryId,
+                                        String orderBy, String statusPro,Optional<String> title){
         ResultPage resultPage = new ResultPage();
         Pageable pageable  ;
         Page<productsEntity> Result ;
+
+        // check role
+        productsEntity.Status status =  productsEntity.Status.ACTIVE;
+        if(statusPro.equals("INACTIVE")){
+          status =  productsEntity.Status.INACTIVE;
+        }
+
         if(categoryId != null){ // category product
             Sort sort;
             if(orderBy.toUpperCase().equals("DESC")){
@@ -189,9 +190,20 @@ public class productsService {
             }else{
                 sort = new Sort(Sort.Direction.ASC, typeSort);
             }
-
             pageable = new PageRequest(page - 1,size,sort);
-            Result = productsRepository.findByCategory_id(categoryId,pageable);
+            if(title.isPresent()){
+                long id;
+                if(isNumeric(title.get())){
+                   id = Long.valueOf(title.get());
+                    Result = productsRepository.findByStatusAndCategory_idAndId(status,
+                            categoryId,id,pageable);
+                }else{
+                    Result = productsRepository.findByStatusAndCategory_idAndNameContaining(status,
+                            categoryId,title.get(),pageable);
+                }
+            }else{
+                Result = productsRepository.findByStatusAndCategory_id(status,categoryId,pageable);
+            }
         }else{ // all product
             Sort sort;
             if(orderBy.toUpperCase().equals("DESC")){
@@ -199,9 +211,19 @@ public class productsService {
             }else{
                 sort = new Sort(Sort.Direction.ASC, typeSort);
             }
-
             pageable = new PageRequest(page - 1,size,sort);
-            Result = productsRepository.findAll(pageable);
+            if(title.isPresent()){
+                long id;
+                if(isNumeric(title.get())){
+                    id = Long.valueOf(title.get());
+                    Result = productsRepository.findByStatusAndId(status,id,pageable);
+
+                }else{
+                    Result = productsRepository.findByStatusAndNameContaining(status, title.get(),pageable);
+                }
+            }else{
+                Result = productsRepository.findByStatus(status,pageable);
+            }
         }
 
         resultPage.setPage(Result.getNumber()  + 1 );
@@ -211,28 +233,52 @@ public class productsService {
     }
 
 
-    public ResultPage productPaginationName(int page, int size, Optional<String> name,String typeSort, String orderBy ){
-        ResultPage resultPage =  new ResultPage();
-        Page<productsEntity> Result ;
-        Pageable pageable ;
-        Sort sort;
-        if(orderBy.toUpperCase().equals("DESC")){
-            sort  = new Sort(Sort.Direction.DESC, typeSort);
-        }else{
-            sort = new Sort(Sort.Direction.ASC, typeSort);
+    public  List<productsDTO> getProductSale(int size){
+        List<productsDTO> list = null;
+        Sort sort  = new Sort(Sort.Direction.DESC,"createddate");
+        Pageable pageable = new PageRequest(0,size,sort);
+        List<discountEntity> listDiscount = discountRepository.findAll();
+        if(listDiscount.size() == 0){
+            return list;
         }
-        pageable = new PageRequest(page - 1,size,sort);
-        Result = productsRepository.findByNameContaining(name.get(),pageable);
-
-        if(Result.getSize() == 0){
-            return resultPage;
+        Collections.reverse(listDiscount);
+        productsEntity.Status status =  productsEntity.Status.ACTIVE;
+        for (discountEntity discount : listDiscount ) {
+            if(discount.getDeadline().compareTo(new Date()) > 0){
+                list = parseList(productsRepository.findByStatusAndDiscountEntitys(status,discount,pageable).getContent());
+                return list;
+            }
         }
-
-        resultPage.setPage(Result.getNumber()  + 1 );
-        resultPage.setListResult(parseList(Result.getContent()));
-        resultPage.setTotalpage(Result.getTotalPages());
-        return resultPage;
+        return  list;
     }
 
+    public List<productsDTO> getProductMaybe(Long categoryId ,int limit){
+          productsEntity.Status status =  productsEntity.Status.INACTIVE;
+          List<productsEntity> listRes =  productsRepository.findByStatusAndCategory_id(status,categoryId);
+          List<productsEntity> listRandom = new ArrayList<>();
+          Random rand = new Random();
 
+          if(limit > listRes.size()){
+              limit = listRes.size();
+          }
+
+          int[] check = new int[limit];
+          int i = 0;
+          int temp;
+          while(true){
+              int randomIndex = rand.nextInt(listRes.size());
+              temp = 0;
+              for (int j : check){
+                  if(j == randomIndex){
+                      temp = 1;
+                  }
+              }
+              if(temp == 0){
+                  check[i] = randomIndex;
+                  listRandom.add(listRes.get(randomIndex));
+                  i++;
+                  if(listRandom.size() == limit) return parseList(listRandom);
+              }
+          }
+    }
 }

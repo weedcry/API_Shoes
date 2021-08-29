@@ -14,7 +14,7 @@ public class productdetailEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne(fetch=FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="productid")
     private productsEntity productsEntity;
 
@@ -26,6 +26,10 @@ public class productdetailEntity {
     @NotNull
     @Min(35)
     private int size;
+
+    @NotNull
+    @Min(0)
+    private long inventory;
 
     @OneToMany(mappedBy = "productdetail")
     private Collection<repositoryEntity> repositoryEntities;
@@ -62,4 +66,13 @@ public class productdetailEntity {
     public void setSize(int size) {
         this.size = size;
     }
+
+    public long getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(long inventory) {
+        this.inventory = inventory;
+    }
 }
+

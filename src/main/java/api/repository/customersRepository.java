@@ -10,6 +10,8 @@ public interface customersRepository extends JpaRepository<customersEntity,Long>
     customersEntity findById(Long id);
 
     @Query(value = "select * from customers where users_id = (select id from users where username = ?1)",nativeQuery = true)
-    customersEntity findByUsers_id(String users_id);
+    customersEntity findByUsers_id(String name);
 
+    @Query(value = "select * from customers where users_id = (select id from users where username = ?1)",nativeQuery = true)
+    customersEntity findByUsername(String username);
 }

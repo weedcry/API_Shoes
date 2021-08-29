@@ -35,6 +35,8 @@ public class repositoryEntity {
     @NotNull
     private  float price;
 
+    private String createdBy;
+
 
     public String getId() {
         return id;
@@ -82,5 +84,13 @@ public class repositoryEntity {
 
     public void setProductdetail(productdetailEntity productdetail) {
         this.productdetail = productdetail;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 }

@@ -17,8 +17,8 @@ public class repositoryDTO {
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private Date datecreated;
 
-    @NotBlank
-    private long productdetailid;
+    @NotNull
+    private productdetailDTO productdetail;
 
     @NotNull
     @Min(1)
@@ -26,6 +26,8 @@ public class repositoryDTO {
 
     @NotNull
     private  float price;
+
+    private  String createdBy;
 
     public String getId() {
         return id;
@@ -67,11 +69,19 @@ public class repositoryDTO {
         this.price = price;
     }
 
-    public long getProductdetailid() {
-        return productdetailid;
+    public productdetailDTO getProductdetail() {
+        return productdetail;
     }
 
-    public void setProductdetailid(long productdetailid) {
-        this.productdetailid = productdetailid;
+    public void setProductdetail(productdetailDTO productdetail) {
+        this.productdetail = productdetail;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 }

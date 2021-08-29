@@ -25,6 +25,7 @@ public class ordersEntity {
     private float total;
 
     @Enumerated(value = EnumType.STRING)
+    @Column(name = "status")
     private Status status;
 
     @NotBlank
@@ -54,7 +55,7 @@ public class ordersEntity {
     @JoinColumn(name ="customer_id")
     private customersEntity customersEntity;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name="payment_id")
     private paymentEntity paymentEntity;
 

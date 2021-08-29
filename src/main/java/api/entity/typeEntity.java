@@ -17,7 +17,7 @@ public class typeEntity {
     private String id;
 
     @NotBlank
-    private String nammetype;
+    private String nametype;
 
 
     @OneToMany(mappedBy = "type")
@@ -32,10 +32,10 @@ public class typeEntity {
     }
 
     public String getNammetype() {
-        return nammetype;
+        return nametype;
     }
 
-    public void setNammetype(String nammetype) {
-        this.nammetype = nammetype;
+    public void setNammetype(String nametype) {
+        this.nametype = nametype;
     }
 }

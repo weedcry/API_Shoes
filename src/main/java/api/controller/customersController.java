@@ -7,6 +7,7 @@ import api.entity.role_name;
 import api.payload.response.MessageResponse;
 import api.repository.roleRepository;
 import api.service.customersService;
+import api.service.sendMailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.validation.Valid;
 
 @RestController
@@ -32,6 +34,7 @@ public class customersController {
         if (principal instanceof UserDetails) {
             username = ((UserDetails)principal).getUsername();
         }
+
         customersDTO customersDTO =  customersService.getcustomers(username);
         if(customersDTO == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("not found");

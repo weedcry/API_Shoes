@@ -19,6 +19,7 @@ import api.security.service.UserDetailsImpl;
 import api.service.customersService;
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,9 +31,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +70,12 @@ public class authController {
 
     @Autowired
     roleRepository roleRepository;
+
+    @Autowired
+    customersRepository customersRepository;
+
+    @Autowired
+    api.service.sendMailService sendMailService;
 
 
 
@@ -137,13 +147,19 @@ public class authController {
         userRepository.save(userEntity);
         //create default customer profile and shope card
         customersService.createcustomer(signUpRequest,userEntity);
+
+        try {
+            sendMailService.sendHtmlWelcomeEmail(userEntity.getEmail(),"registered successfully");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
 
 
     @GetMapping("/login-google")
-    public ResponseEntity<?> loginGoogle(HttpServletRequest request) throws ClientProtocolException, IOException, ParseException {
+    public ResponseEntity<?> loginGoogle(HttpServletRequest request) throws ClientProtocolException, IOException, ParseException, URISyntaxException {
         System.out.println("login witht google");
         String code = request.getParameter("code");
         if (code == null || code.isEmpty()) {
@@ -154,13 +170,12 @@ public class authController {
         GoogleAccount googlePojo = googleUtils.getUserInfo(accessToken);
 
         System.out.println("user "+googlePojo.getEmail()+"-"+googlePojo.getName()
-                +"-"+googlePojo.getId()+"-"+googlePojo.getLink()+"-"+googlePojo.getPicture());
-
+                +"-"+googlePojo.getId()+"-"+googlePojo.getPicture());
         //signup USER
         Optional<usersEntity> user = userRepository.findByUsername(googlePojo.getEmail());
         if(!user.isPresent()){
             System.out.println("Create new user");
-            String[] name = googlePojo.getEmail().split("\\.");
+            String[] name = googlePojo.getEmail().split("@");
             usersEntity userEntity = new usersEntity(googlePojo.getEmail(), name[0],
                     googlePojo.getEmail(), encoder.encode(googlePojo.getId()));
 
@@ -169,7 +184,12 @@ public class authController {
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roleEntities.add(userRoleEntity);
             userEntity.setRoles(roleEntities);
-            userRepository.save(userEntity);
+            usersEntity users =  userRepository.save(userEntity);
+
+            //signup customer
+            customersEntity customer = new customersEntity();
+            customer.setUsersEntitys(users);
+            customersRepository.save(customer);
         }
         System.out.println("login user");
         // auththen account
@@ -184,15 +204,16 @@ public class authController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
         System.out.println("login success");
-        return ResponseEntity.ok(new JwtResponse(
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles,jwt));
+
+        URI yahoo = new URI("http://localhost:3000/login?platform=google&token="+jwt);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(yahoo);
+        return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
     }
 
+
     @GetMapping("/login-facebook")
-    public ResponseEntity loginFacebook(HttpServletRequest request) throws ClientProtocolException, IOException, ParseException {
+    public ResponseEntity loginFacebook(HttpServletRequest request) throws ClientProtocolException, IOException, ParseException, URISyntaxException {
         String code = request.getParameter("code");
         if (code == null || code.isEmpty()) {
             System.out.println("login fail");
@@ -201,21 +222,24 @@ public class authController {
         String accessToken = restFb.getToken(code);
         com.restfb.types.User userfb = restFb.getUserInfo(accessToken);
 
-        System.out.println("check -"+userfb.getId() +"-"+userfb.getName() );
-
         //signup USER
         Optional<usersEntity> user = userRepository.findByUsername(userfb.getId());
         if(!user.isPresent()){
             System.out.println("Create new user");
             usersEntity userEntity = new usersEntity(userfb.getId(), userfb.getName(),
-                    userfb.getId()+"@gmail.com", encoder.encode(userfb.getId()));
+                    "", encoder.encode(userfb.getId()));
 
             Set<roleEntity> roleEntities = new HashSet<>();
             roleEntity userRoleEntity = roleRepository.findByName(role_name.USER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roleEntities.add(userRoleEntity);
             userEntity.setRoles(roleEntities);
-            userRepository.save(userEntity);
+            usersEntity users =  userRepository.save(userEntity);
+
+            //signup customer
+            customersEntity customer = new customersEntity();
+            customer.setUsersEntitys(users);
+            customersRepository.save(customer);
         }
         System.out.println("login user");
         // auththen account
@@ -230,13 +254,11 @@ public class authController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
         System.out.println("login success");
-        return ResponseEntity.ok(new JwtResponse(
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles,jwt));
+
+        URI yahoo = new URI("http://localhost:3000/login?platform=facebook&token="+jwt);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(yahoo);
+        return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
+
     }
-
-
-
 }
