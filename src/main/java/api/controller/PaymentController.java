@@ -27,7 +27,7 @@ import java.net.URISyntaxException;
 @RequestMapping("/api/payment")
 public class PaymentController {
     public static final String URL_PAYPAL_SUCCESS = "api/payment/success";
-    public static final String URL_PAYPAL_CANCEL = "pay/cancel";
+    public static final String URL_PAYPAL_CANCEL = "api/payment/cancel";
     private Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
@@ -77,8 +77,11 @@ public class PaymentController {
     }
 
     @GetMapping(URL_PAYPAL_CANCEL)
-    public String cancelPay(){
-        return "cancel";
+    public ResponseEntity<?> cancelPay() throws URISyntaxException {
+        URI yahoo = new URI("http://localhost:3000/checkout");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(yahoo);
+        return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
     }
 
     @GetMapping("/success")

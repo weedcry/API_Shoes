@@ -12,13 +12,4 @@ public class productdetailService {
     productdetailRepository productdetailRepository;
 
 
-
-    public void createproductdetail(){
-
-
-
-
-    }
-
-
 }

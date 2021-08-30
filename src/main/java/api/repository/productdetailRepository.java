@@ -14,5 +14,4 @@ public interface productdetailRepository extends JpaRepository<productdetailEnti
     productdetailEntity findById(long id);
 
 
-
 }

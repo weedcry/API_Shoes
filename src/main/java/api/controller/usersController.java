@@ -1,21 +1,25 @@
 package api.controller;
 
 import api.DTO.usersDTO;
+import api.service.sendMailService;
 import api.service.usersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.mail.MessagingException;
 
 @RestController
 @RequestMapping("/api/users")
 public class usersController {
     @Autowired
     usersService usersService;
+
+    @Autowired
+    sendMailService sendMailService;
 
     @GetMapping("")
        public ResponseEntity<Object> getusers(){
@@ -33,6 +37,12 @@ public class usersController {
             return ResponseEntity.status(HttpStatus.OK).body(usersDTO);
         }
 
+    @PostMapping("/mail/{mailto}")
+    public ResponseEntity<Object> getusers(@PathVariable String mailto) throws MessagingException {
+        sendMailService.sendHtmlWelcomeEmail(mailto+"@gmail.com","welcome");
+
+        return ResponseEntity.status(HttpStatus.OK).body("success");
+    }
 
 
 }

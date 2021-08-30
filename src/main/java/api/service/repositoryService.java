@@ -21,6 +21,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -164,6 +170,79 @@ public class repositoryService {
         ).collect(Collectors.toList());
 
         return list;
+    }
+
+    public Object doanhsoNhapHang(String mode) throws ParseException {
+        if(mode.equals("YEAR")){
+            List<Float> listTotal = new ArrayList<>();
+            Date date = new Date();
+            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            int year  = localDate.getYear();
+            for(int i = 1;i<=12;i++){
+                Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+i+"/"+year);
+                Date dateto = new SimpleDateFormat("dd/MM/yyyy").parse("31/"+i+"/"+year);
+                List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+                float total = 0;
+                for(repositoryEntity repository : list){
+                    total +=repository.getPrice()*repository.getQuantity();
+                }
+                listTotal.add(total);
+            }
+            return listTotal;
+        }else {
+            Date dateto = new Date();
+            LocalDate localDate = dateto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            int year  = localDate.getYear();
+            int month = localDate.getMonthValue();
+            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+month+"/"+year);
+            List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+            float total = 0;
+            for(repositoryEntity repository : list){
+                total +=repository.getPrice()*repository.getQuantity();
+            }
+            return total;
+        }
+    }
+
+    public Object slNhapHang(String mode) throws ParseException {
+        if(mode.equals("YEAR")){
+            List<Long> listTotal = new ArrayList<>();
+            Date date = new Date();
+            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            int year  = localDate.getYear();
+            for(int i = 1;i<=12;i++){
+                Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+i+"/"+year);
+                Date dateto = new SimpleDateFormat("dd/MM/yyyy").parse("31/"+i+"/"+year);
+                List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+                long total = 0;
+                for(repositoryEntity repository : list){
+                    total +=repository.getQuantity();
+                }
+                listTotal.add(total);
+            }
+            return listTotal;
+        }else {
+            Date dateto = new Date();
+            LocalDate localDate = dateto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            int year  = localDate.getYear();
+            int month = localDate.getMonthValue();
+            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+month+"/"+year);
+            List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+            long total = 0;
+            for(repositoryEntity repository : list){
+                total +=repository.getQuantity();
+            }
+            return total;
+        }
+    }
+
+    public Long tonkho() {
+            List<productdetailEntity> list = productdetailRepository.findAll();
+            long total = 0;
+            for(productdetailEntity prodetail : list){
+                total +=prodetail.getInventory();
+            }
+            return total;
     }
 
 }

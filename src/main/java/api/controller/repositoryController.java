@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,5 +70,24 @@ public class repositoryController {
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(repository);
     }
+
+    @GetMapping("/doanhso/{mode}")
+    public ResponseEntity DoanhThu(@PathVariable Optional<String> mode) throws ParseException {
+        Object object =  repositoryService.doanhsoNhapHang(mode.get().toUpperCase());
+        return ResponseEntity.status(HttpStatus.OK).body(object);
+    }
+
+    @GetMapping("/soluong/{mode}")
+    public ResponseEntity SoLuong(@PathVariable Optional<String> mode) throws ParseException {
+        Object object =  repositoryService.slNhapHang(mode.get().toUpperCase());
+        return ResponseEntity.status(HttpStatus.OK).body(object);
+    }
+
+    @GetMapping("/tonkho")
+    public ResponseEntity TonKho()  {
+        Object object =  repositoryService.tonkho();
+        return ResponseEntity.status(HttpStatus.OK).body(object);
+    }
+
 
 }

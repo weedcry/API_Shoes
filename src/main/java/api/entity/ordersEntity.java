@@ -17,7 +17,6 @@ public class ordersEntity {
         DELIVERING,DELIVERED,UNCONFIRM,CANCEL;
     }
 
-
     @Id
     private String id;
 

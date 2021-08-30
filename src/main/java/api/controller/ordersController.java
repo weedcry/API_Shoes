@@ -11,7 +11,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.validation.Valid;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,7 +56,7 @@ public class ordersController {
 
 
     @PostMapping("/create")
-    public ResponseEntity createOrder(@Valid @RequestBody infoOrderDTO infoOrder){
+    public ResponseEntity createOrder(@Valid @RequestBody infoOrderDTO infoOrder) throws MessagingException {
         String username = "";
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
@@ -113,6 +115,18 @@ public class ordersController {
             return ResponseEntity.status(HttpStatus.OK).body("success");
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error");
+    }
+
+    @GetMapping("/doanhthu/{mode}")
+    public ResponseEntity DoanhThu(@PathVariable Optional<String> mode) throws ParseException {
+        Object object =  ordersService.DoanhThu(mode.get().toUpperCase());
+        return ResponseEntity.status(HttpStatus.OK).body(object);
+    }
+
+    @GetMapping("/ttdonhang/{mode}")
+    public ResponseEntity TinhTrangDonHang(@PathVariable Optional<String> mode) throws ParseException {
+        Object object =  ordersService.tinhTrangDonHang(mode.get().toUpperCase());
+        return ResponseEntity.status(HttpStatus.OK).body(object);
     }
 
 }

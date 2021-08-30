@@ -148,11 +148,11 @@ public class authController {
         //create default customer profile and shope card
         customersService.createcustomer(signUpRequest,userEntity);
 
-        try {
-            sendMailService.sendHtmlWelcomeEmail(userEntity.getEmail(),"registered successfully");
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            sendMailService.sendHtmlWelcomeEmail(userEntity.getEmail(),"registered successfully");
+//        } catch (MessagingException e) {
+//            e.printStackTrace();
+//        }
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
@@ -204,7 +204,6 @@ public class authController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
         System.out.println("login success");
-
         URI yahoo = new URI("http://localhost:3000/login?platform=google&token="+jwt);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(yahoo);
