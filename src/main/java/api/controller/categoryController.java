@@ -17,7 +17,7 @@ public class categoryController {
     @Autowired
     categoryService categoryService;
 
-    @GetMapping("")
+    @GetMapping("/get")
     public ResponseEntity getCategory(){
         List<categoryEntity> list = categoryService.getlistcategory();
         if(list.size() == 0){

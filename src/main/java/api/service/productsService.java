@@ -259,7 +259,7 @@ public class productsService {
           Random rand = new Random();
 
           if(limit > listRes.size()){
-              limit = listRes.size();
+              return parseList(listRes);
           }
 
           int[] check = new int[limit];

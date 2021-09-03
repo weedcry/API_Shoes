@@ -158,6 +158,9 @@ public class ordersService {
                 return false;
             }
             long valueNew = productdetail.getInventory() - shopcartDTO.getQuantity();
+            if(valueNew < 0){
+                return false;
+            }
             productdetail.setInventory(valueNew);
             productdetailRepository.save(productdetail);
 

@@ -43,7 +43,7 @@ public class wishlistController {
         return ResponseEntity.status(HttpStatus.OK).body("success");
     }
 
-    @DeleteMapping("")
+    @PostMapping("/delete")
     public ResponseEntity deleteWishlist(@Valid @RequestBody wishlistDTO wishlistDTO){
 
         Boolean check = wishlistService.deleteWishlist(wishlistDTO);
