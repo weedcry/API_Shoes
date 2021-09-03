@@ -253,7 +253,7 @@ public class productsService {
     }
 
     public List<productsDTO> getProductMaybe(Long categoryId ,int limit){
-          productsEntity.Status status =  productsEntity.Status.INACTIVE;
+          productsEntity.Status status =  productsEntity.Status.ACTIVE;
           List<productsEntity> listRes =  productsRepository.findByStatusAndCategory_id(status,categoryId);
           List<productsEntity> listRandom = new ArrayList<>();
           Random rand = new Random();

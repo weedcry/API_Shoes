@@ -23,6 +23,7 @@ import com.paypal.base.rest.PayPalRESTException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Controller
 @RequestMapping("/api/payment")
 public class PaymentController {

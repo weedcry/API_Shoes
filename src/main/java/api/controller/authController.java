@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class authController {
@@ -159,7 +160,7 @@ public class authController {
 
 
     @GetMapping("/login-google")
-    public ResponseEntity<?> loginGoogle(HttpServletRequest request) throws ClientProtocolException, IOException, ParseException, URISyntaxException {
+    public ResponseEntity<?> loginGoogle(HttpServletRequest request) throws IOException, ParseException, URISyntaxException {
         System.out.println("login witht google");
         String code = request.getParameter("code");
         if (code == null || code.isEmpty()) {
@@ -193,16 +194,17 @@ public class authController {
         }
         System.out.println("login user");
         // auththen account
+        System.out.println("check -"+googlePojo.getEmail()+"-"+googlePojo.getId());
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(googlePojo.getEmail(),googlePojo.getId()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-//        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-//        List<String> roles = userDetails.getAuthorities().stream()
-//                .map(item -> item.getAuthority())
-//                .collect(Collectors.toList());
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
         System.out.println("login success");
         URI yahoo = new URI("http://localhost:3000/login?platform=google&token="+jwt);
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -248,10 +250,10 @@ public class authController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-//        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-//        List<String> roles = userDetails.getAuthorities().stream()
-//                .map(item -> item.getAuthority())
-//                .collect(Collectors.toList());
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
         System.out.println("login success");
 
         URI yahoo = new URI("http://localhost:3000/login?platform=facebook&token="+jwt);

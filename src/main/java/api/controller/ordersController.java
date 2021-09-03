@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.mail.MessagingException;
 import javax.validation.Valid;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("api/orders")
 public class ordersController {
@@ -35,6 +37,7 @@ public class ordersController {
         if(list.size() == 0){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("not found");
         }
+        Collections.reverse(list);
             return ResponseEntity.status(HttpStatus.OK).body(list);
     }
 

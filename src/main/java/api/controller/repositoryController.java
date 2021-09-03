@@ -17,6 +17,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/repository")
 public class repositoryController {

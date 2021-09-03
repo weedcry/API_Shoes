@@ -146,9 +146,10 @@ public class ordersService {
             //price
             float price = (shopcart.getProductdetail().getProductsEntity().getPrice()*shopcart.getQuantity());
             if(shopcart.getProductdetail().getProductsEntity().getDiscountEntitys() != null){
-                float discount = price * shopcart.getProductdetail().getProductsEntity().getDiscountEntitys().getPercent();
+                float discount = price * (shopcart.getProductdetail().getProductsEntity().getDiscountEntitys().getPercent()/100);
                 price -= discount;
             }
+
             total += price;
             shopcartRepository.delete(shopcart);
 

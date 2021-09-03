@@ -29,9 +29,6 @@ public class orderdetailService {
         List<orderdetailDTO> list = orderdetailRepository.listorderdetailcustomer(customers.getId()).stream().map(
                 orderdetailEntity -> {
                     orderdetailDTO orderdetail = modelMapper.map(orderdetailEntity,orderdetailDTO.class);
-//                    orderdetail.setProductid(orderdetailEntity.getProductsEntity().getId());
-//                    orderdetail.setOrderid(orderdetailEntity.getOrdersEntity().getId());
-//                    orderdetail.setSize(orderdetailEntity.getSize());
                     return orderdetail;
                 }
         ).collect(Collectors.toList());
@@ -42,9 +39,6 @@ public class orderdetailService {
         List<orderdetailDTO> list = orderdetailRepository.findAll().stream().map(
                 orderdetailEntity -> {
                     orderdetailDTO orderdetail = modelMapper.map(orderdetailEntity,orderdetailDTO.class);
-//                    orderdetail.setProductid(orderdetailEntity.getProduct().getId());
-//                    orderdetail.setOrderid(orderdetailEntity.getOrdersEntity().getId());
-//                    orderdetail.setSize(orderdetailEntity.getSize());
                     return orderdetail;
                 }
         ).collect(Collectors.toList());
