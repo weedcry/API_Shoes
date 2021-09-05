@@ -234,7 +234,7 @@ public class productsService {
 
 
     public  List<productsDTO> getProductSale(int size){
-        List<productsDTO> list = null;
+        List<productsDTO> list = new ArrayList<>();
         Sort sort  = new Sort(Sort.Direction.DESC,"createddate");
         Pageable pageable = new PageRequest(0,size,sort);
         List<discountEntity> listDiscount = discountRepository.findAll();
@@ -245,8 +245,11 @@ public class productsService {
         productsEntity.Status status =  productsEntity.Status.ACTIVE;
         for (discountEntity discount : listDiscount ) {
             if(discount.getDeadline().compareTo(new Date()) > 0){
-                list = parseList(productsRepository.findByStatusAndDiscountEntitys(status,discount,pageable).getContent());
-                return list;
+                List<productsDTO> listtemp = parseList(productsRepository.findByStatusAndDiscountEntitys(status,discount,pageable).getContent());
+                for(productsDTO proDTO : listtemp){
+                    list.add(proDTO);
+                    if(list.size() == size) return list;
+                }
             }
         }
         return  list;

@@ -14,4 +14,7 @@ public interface orderdetailRepository extends JpaRepository<orderdetailEntity, 
         @Query(value="select * from orderdetail where order_id = ?1 ",nativeQuery = true)
         orderdetailEntity findOrderdetail(String order_id);
 
+
+
+
 }

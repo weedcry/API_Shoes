@@ -4,10 +4,7 @@ import api.DTO.ResultPageOrder;
 import api.DTO.ResultPageRepository;
 import api.DTO.productdetailDTO;
 import api.DTO.repositoryDTO;
-import api.entity.ordersEntity;
-import api.entity.productdetailEntity;
-import api.entity.repositoryEntity;
-import api.entity.typeEntity;
+import api.entity.*;
 import api.repository.productdetailRepository;
 import api.repository.productsRepository;
 import api.repository.repositoryRepository;
@@ -124,7 +121,7 @@ public class repositoryService {
         repositoryDTOs.setTypeid(repositoryEntity.getType().getId());
         //product detail dto
         productdetailDTO productdetailDTO = modelMapper.map(repositoryEntity.getProductdetail(),productdetailDTO.class);
-        productdetailDTO.setProductid(repositoryEntity.getProductdetail().getId());
+        productdetailDTO.setProductid(repositoryEntity.getProductdetail().getProductsEntity().getId());
         repositoryDTOs.setProductdetail(productdetailDTO);
 
         return repositoryDTOs;
@@ -172,77 +169,46 @@ public class repositoryService {
         return list;
     }
 
-    public Object doanhsoNhapHang(String mode) throws ParseException {
-        if(mode.equals("YEAR")){
-            List<Float> listTotal = new ArrayList<>();
-            Date date = new Date();
-            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            for(int i = 1;i<=12;i++){
-                Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+i+"/"+year);
-                Date dateto = new SimpleDateFormat("dd/MM/yyyy").parse("31/"+i+"/"+year);
-                List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
-                float total = 0;
-                for(repositoryEntity repository : list){
-                    total +=repository.getPrice()*repository.getQuantity();
-                }
-                listTotal.add(total);
-            }
-            return listTotal;
-        }else {
-            Date dateto = new Date();
-            LocalDate localDate = dateto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            int month = localDate.getMonthValue();
-            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+month+"/"+year);
-            List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
-            float total = 0;
-            for(repositoryEntity repository : list){
-                total +=repository.getPrice()*repository.getQuantity();
-            }
-            return total;
-        }
-    }
 
-    public Object slNhapHang(String mode) throws ParseException {
-        if(mode.equals("YEAR")){
-            List<Long> listTotal = new ArrayList<>();
-            Date date = new Date();
-            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            for(int i = 1;i<=12;i++){
-                Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+i+"/"+year);
-                Date dateto = new SimpleDateFormat("dd/MM/yyyy").parse("31/"+i+"/"+year);
-                List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
-                long total = 0;
-                for(repositoryEntity repository : list){
-                    total +=repository.getQuantity();
+    public Object slNhapHang(String mode,long idpro,String strDateFrom,String strDateTo) throws ParseException {
+        Float[] strfloat = new Float[2];
+        Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse( strDateFrom );
+        Date dateto = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(strDateTo +" 23:59:59");
+        float totalnhaphang = 0;
+        float totalprice = 0;
+        if(mode.equals("DETAIL")){
+            //get repository
+            List<repositoryEntity> listrepo = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+            for(repositoryEntity repo : listrepo){
+                if(repo.getProductdetail().getId() == idpro){
+                    totalnhaphang+=repo.getQuantity();
+                    totalprice+=(repo.getPrice()*repo.getQuantity());
                 }
-                listTotal.add(total);
             }
-            return listTotal;
-        }else {
-            Date dateto = new Date();
-            LocalDate localDate = dateto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            int month = localDate.getMonthValue();
-            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+month+"/"+year);
-            List<repositoryEntity> list = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
-            long total = 0;
-            for(repositoryEntity repository : list){
-                total +=repository.getQuantity();
+            strfloat[0] = totalnhaphang;
+            strfloat[1] = totalprice;
+        }else if(mode.equals("PRODUCT")){
+            //get repository
+            List<repositoryEntity> listrepo = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+            for(repositoryEntity repo : listrepo){
+                if(repo.getProductdetail().getProductsEntity().getId() == idpro){
+                    totalnhaphang+=repo.getQuantity();
+                    totalprice+=(repo.getPrice()*repo.getQuantity());
+                }
             }
-            return total;
+            strfloat[0] = totalnhaphang;
+            strfloat[1] = totalprice;
+        }else{
+            //get repository
+            List<repositoryEntity> listrepo = repositoryRepository.findByDatecreatedBetween(datefrom,dateto);
+            for(repositoryEntity repo : listrepo){
+                    totalnhaphang+=repo.getQuantity();
+                totalprice+=(repo.getPrice()*repo.getQuantity());
+            }
+            strfloat[0] = totalnhaphang;
+            strfloat[1] = totalprice;
         }
-    }
-
-    public Long tonkho() {
-            List<productdetailEntity> list = productdetailRepository.findAll();
-            long total = 0;
-            for(productdetailEntity prodetail : list){
-                total +=prodetail.getInventory();
-            }
-            return total;
+        return  strfloat;
     }
 
 }

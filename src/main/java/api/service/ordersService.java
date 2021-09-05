@@ -57,6 +57,8 @@ public class ordersService {
     @Autowired
     api.service.sendMailService sendMailService;
 
+    @Autowired
+    repositoryRepository repositoryRepository;
 
     public List<ordersDTO> getListOrderCustomer(String userid){
         List<ordersDTO> list = new ArrayList<>();
@@ -151,7 +153,6 @@ public class ordersService {
             }
 
             total += price;
-            shopcartRepository.delete(shopcart);
 
             // inventory product
             productdetailEntity productdetail = productdetailRepository.findById(shopcartDTO.getProductdetail().getId());
@@ -171,6 +172,8 @@ public class ordersService {
             orderdetail.setQuantity(shopcart.getQuantity());
             orderdetail.setPrice(price);
             listOrderDetail.add(orderdetail);
+
+            shopcartRepository.delete(shopcart);
         }
 
         //create order
@@ -188,7 +191,15 @@ public class ordersService {
         ordersEntity.setPhone(infoOrder.getPhone());
         ordersEntity.setStatus(api.entity.ordersEntity.Status.UNCONFIRM);
         ordersEntity.setCustomersEntity(customersEntity);
-        ordersEntity.setPaymentEntity(paymentRepository.findById(infoOrder.getPaymentid()));
+        paymentEntity finalPayment = new paymentEntity();
+        if(infoOrder.getPaymentid() == 0){
+           paymentEntity payment = new paymentEntity();
+           payment.setName("SHIPCOD");
+            finalPayment = paymentRepository.save(payment);
+        }else{
+            finalPayment = paymentRepository.findById(infoOrder.getPaymentid());
+        }
+        ordersEntity.setPaymentEntity(finalPayment);
         ordersEntity.setTotal(total);
 //        ordersEntity.setOrderdetailEntities(listOrderDetail);
         final ordersEntity finalOrder =  ordersRepository.save(ordersEntity);
@@ -285,94 +296,227 @@ public class ordersService {
     }
 
 
-    public Object DoanhThu(String mode) throws ParseException {
-        if(mode.equals("YEAR")){
-            List<Float> listTotal = new ArrayList<>();
-            Date date = new Date();
-            ordersEntity.Status status = ordersEntity.Status.DELIVERED;
-            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            for(int i = 1;i<=12;i++){
-                Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+i+"/"+year);
-                Date dateto = new SimpleDateFormat("dd/MM/yyyy").parse("31/"+i+"/"+year);
-                List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
-                float total = 0;
-                for(ordersEntity order : list){
-                    total+=order.getTotal();
-                }
-                listTotal.add(total);
-            }
-           return listTotal;
-        }else{
-            Date dateto = new Date();
-            LocalDate localDate = dateto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            int month = localDate.getMonthValue();
-            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+month+"/"+year);
-            ordersEntity.Status status = ordersEntity.Status.DELIVERED;
-            List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
-            float total = 0;
+    public Object DoanhThu(String mode,long idpro,String strDateFrom,String strDateTo) throws ParseException {
+        Float[] strfloat = new Float[2];
+        //doanh thu datefrom and dateto
+        Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse( strDateFrom );
+        Date dateto = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(strDateTo +" 23:59:59");
+        float totaldoanhthu = 0;
+        float totalloinhuan = 0;
+        ordersEntity.Status status = ordersEntity.Status.DELIVERED;
+        List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
+        int number = 0;
+        if(mode.equals("DETAIL")){
+            // lọc theo mã chi tiết sản phẩm
             for(ordersEntity order : list){
-                total+=order.getTotal();
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getId() == idpro){
+                        number+=orderdetail.getQuantity();
+                        totaldoanhthu += orderdetail.getPrice()*orderdetail.getQuantity();
+                    }
+                }
             }
-            return total;
+            strfloat[0] = totaldoanhthu;
+            //get repository
+            int count = 0;
+            List<repositoryEntity> listrepo = repositoryRepository.findAll();
+            System.out.println("size "+listrepo.size());
+            for(repositoryEntity repo : listrepo){
+                if(repo.getProductdetail().getId() == idpro){
+                    count++;
+                    totalloinhuan+=repo.getPrice();
+                }
+            }
+            if(count != 0){
+                totalloinhuan=totalloinhuan/count;
+                totalloinhuan = totaldoanhthu - (totalloinhuan*number);
+            }
+            strfloat[1] = totalloinhuan;
+        }else if(mode.equals("PRODUCT")){
+            // lọc theo mã sản phẩm
+            for(ordersEntity order : list){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getProductsEntity().getId() == idpro){
+                        number+=orderdetail.getQuantity();
+                        totaldoanhthu += orderdetail.getPrice()*orderdetail.getQuantity();
+                    }
+                }
+            }
+            strfloat[0] = totaldoanhthu;
+            //get repository
+            int count = 0;
+            List<repositoryEntity> listrepo = repositoryRepository.findAll();
+            for(repositoryEntity repo : listrepo){
+                if(repo.getProductdetail().getProductsEntity().getId() == idpro){
+                    count++;
+                    totalloinhuan+=repo.getPrice();
+                }
+            }
+            if(count != 0){
+                totalloinhuan=totalloinhuan/count;
+                totalloinhuan = totaldoanhthu - (totalloinhuan*number);
+            }
+            strfloat[1] = totalloinhuan;
+        }else{
+            // lọc tất cả sản phẩm
+            for(ordersEntity order : list){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                        number+=orderdetail.getQuantity();
+                }
+                totaldoanhthu+=order.getTotal();
+            }
+            strfloat[0] = totaldoanhthu;
+            //get repository
+            int count = 0;
+            List<repositoryEntity> listrepo = repositoryRepository.findAll();
+            for(repositoryEntity repo : listrepo){
+                    count++;
+                    totalloinhuan+=repo.getPrice();
+            }
+            if(count != 0){
+                totalloinhuan=totalloinhuan/count;
+                totalloinhuan = totaldoanhthu - (totalloinhuan*number);
+            }
+            strfloat[1] = totalloinhuan;
         }
+        return  strfloat;
     }
 
-    public Object tinhTrangDonHang(String mode) throws ParseException {
-        if(mode.equals("YEAR")){
-            List<String> listTotal = new ArrayList<>();
-            Date date = new Date();
-            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            for(int i = 1;i<=12;i++){
-                Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+i+"/"+year);
-                Date dateto = new SimpleDateFormat("dd/MM/yyyy").parse("31/"+i+"/"+year);
-                ordersEntity.Status status = ordersEntity.Status.DELIVERED;
-                List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
-                ordersEntity.Status status1 = ordersEntity.Status.CANCEL;
-                List<ordersEntity> list1 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status1);
-                listTotal.add( String.valueOf(list.size())+"-"+String.valueOf(list1.size()));
-            }
-            return listTotal;
-        }else if(mode.equals("MONTH")){
-            List<Integer> listTotal = new ArrayList<>();
-            Date dateto = new Date();
-            LocalDate localDate = dateto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int year  = localDate.getYear();
-            int month = localDate.getMonthValue();
-            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse("01/"+month+"/"+year);
+    public Object tinhTrangDonHang(String mode,long idpro,String strDateFrom,String strDateTo) throws ParseException {
+        Integer[] strint = new Integer[4];
+        Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse( strDateFrom );
+        Date dateto = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(strDateTo +" 23:59:59");
+        int totalsuccess = 0;
+        int totalcancel = 0;
+        int totaldelivering = 0;
+        int totalunconfirm = 0;
+        if(mode.equals("DETAIL")){
+            // tt don hang success
             ordersEntity.Status status = ordersEntity.Status.DELIVERED;
             List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
-            listTotal.add(list.size());
-            ordersEntity.Status status1 = ordersEntity.Status.CANCEL;
-            List<ordersEntity> list1 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status1);
-            listTotal.add(list1.size());
-            return  listTotal;
-        }else {
-            List<Integer> listTotal = new ArrayList<>();
-            Date date = new Date();
-            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            int day = localDate.getDayOfMonth();
-            int year  = localDate.getYear();
-            int month = localDate.getMonthValue();
-            System.out.println(day);
-            Date datefrom = new SimpleDateFormat("dd/MM/yyyy").parse(day+"/"+month+"/"+year);
-            Date dateto = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(day+"/"+month+"/"+year +" 23:59:59");
 
-            ordersEntity.Status status = ordersEntity.Status.DELIVERED;
-            List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
-            listTotal.add(list.size());
+            for(ordersEntity order : list){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getId() == idpro){
+                        totalsuccess++;
+                    }
+                }
+            }
+
+            // tt don hang cancel
             ordersEntity.Status status1 = ordersEntity.Status.CANCEL;
             List<ordersEntity> list1 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status1);
-            listTotal.add(list1.size());
+
+            for(ordersEntity order : list1){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getId() == idpro){
+                        totalcancel++;
+                    }
+                }
+            }
+
+            // tt don hang delivering
             ordersEntity.Status status2 = ordersEntity.Status.DELIVERING;
             List<ordersEntity> list2 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status2);
-            listTotal.add(list2.size());
+
+            for(ordersEntity order : list2){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getId() == idpro){
+                        totaldelivering++;
+                    }
+                }
+            }
+
+            // tt don hang delivering
             ordersEntity.Status status3 = ordersEntity.Status.UNCONFIRM;
             List<ordersEntity> list3 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status3);
-            listTotal.add(list3.size());
-            return  listTotal;
+
+            for(ordersEntity order : list3){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getId() == idpro){
+                        totalunconfirm++;
+                    }
+                }
+            }
+
+            strint[0] = totalsuccess;
+            strint[1] = totalcancel;
+            strint[2] = totaldelivering;
+            strint[3] = totalunconfirm;
+            return strint;
+        }else if(mode.equals("PRODUCT")){
+            // tt don hang success
+            ordersEntity.Status status = ordersEntity.Status.DELIVERED;
+            List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
+            for(ordersEntity order : list){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getProductsEntity().getId() == idpro){
+                        totalsuccess++;
+                    }
+                }
+            }
+
+            // tt don hang cancel
+            ordersEntity.Status status1 = ordersEntity.Status.CANCEL;
+            List<ordersEntity> list1 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status1);
+
+            for(ordersEntity order : list1){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getProductsEntity().getId() == idpro){
+                        totalcancel++;
+                    }
+                }
+            }
+
+            // tt don hang delivering
+            ordersEntity.Status status2 = ordersEntity.Status.DELIVERING;
+            List<ordersEntity> list2 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status2);
+
+            for(ordersEntity order : list2){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getProductsEntity().getId() == idpro){
+                        totaldelivering++;
+                    }
+                }
+            }
+
+            // tt don hang delivering
+            ordersEntity.Status status3 = ordersEntity.Status.UNCONFIRM;
+            List<ordersEntity> list3 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status3);
+
+            for(ordersEntity order : list3){
+                for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
+                    if(orderdetail.getProductdetailEntity().getProductsEntity().getId()== idpro){
+                        totalunconfirm++;
+                    }
+                }
+            }
+
+            strint[0] = totalsuccess;
+            strint[1] = totalcancel;
+            strint[2] = totaldelivering;
+            strint[3] = totalunconfirm;
+            return strint;
+        }else{
+
+            // tt don hang success
+            ordersEntity.Status status = ordersEntity.Status.DELIVERED;
+            List<ordersEntity> list = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status);
+            // tt don hang cancel
+            ordersEntity.Status status1 = ordersEntity.Status.CANCEL;
+            List<ordersEntity> list1 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status1);
+            // tt don hang delivering
+            ordersEntity.Status status2 = ordersEntity.Status.DELIVERING;
+            List<ordersEntity> list2 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status2);
+            // tt don hang delivering
+            ordersEntity.Status status3 = ordersEntity.Status.UNCONFIRM;
+            List<ordersEntity> list3 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status3);
+
+            strint[0] = list.size();
+            strint[1] = list1.size();
+            strint[2] = list2.size();
+            strint[3] = list3.size();
+            return strint;
         }
     }
 }

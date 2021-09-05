@@ -120,15 +120,23 @@ public class ordersController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error");
     }
 
-    @GetMapping("/doanhthu/{mode}")
-    public ResponseEntity DoanhThu(@PathVariable Optional<String> mode) throws ParseException {
-        Object object =  ordersService.DoanhThu(mode.get().toUpperCase());
+    @GetMapping("/doanhthu")
+    public ResponseEntity DoanhThu(
+            @RequestParam(name = "mode") String mode,
+            @RequestParam(name = "id") Long idpro,
+            @RequestParam(name = "datefrom") String datefrom,
+            @RequestParam(name = "dateto") String dateto) throws ParseException {
+
+        Object object =  ordersService.DoanhThu(mode.toUpperCase(),idpro,datefrom,dateto);
         return ResponseEntity.status(HttpStatus.OK).body(object);
     }
 
-    @GetMapping("/ttdonhang/{mode}")
-    public ResponseEntity TinhTrangDonHang(@PathVariable Optional<String> mode) throws ParseException {
-        Object object =  ordersService.tinhTrangDonHang(mode.get().toUpperCase());
+    @GetMapping("/ttdonhang")
+    public ResponseEntity TinhTrangDonHang(@RequestParam(name = "mode") String mode,
+                                           @RequestParam(name = "id") Long idpro,
+                                           @RequestParam(name = "datefrom") String datefrom,
+                                           @RequestParam(name = "dateto") String dateto) throws ParseException {
+        Object object =  ordersService.tinhTrangDonHang(mode.toUpperCase(),idpro,datefrom,dateto);
         return ResponseEntity.status(HttpStatus.OK).body(object);
     }
 

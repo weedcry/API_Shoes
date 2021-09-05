@@ -44,8 +44,6 @@ public class customersService {
     }
 
 
-
-
     public customersDTO getcustomers(String username){
         customersEntity customersEntity = customersRepository.findByUsername(username);
         usersEntity user = usersRepository.finduser(username);
@@ -64,6 +62,10 @@ public class customersService {
         customersEntity customersEntity = mapper.map(customerDTO, api.entity.customersEntity.class);
         customersEntity.setUsersEntitys(usersEntity);
         customersRepository.save(customersEntity);
+        if(!customerDTO.getEmail().isEmpty()){
+            usersEntity.setEmail(customerDTO.getEmail());
+            usersRepository.save(usersEntity);
+        }
         return customerDTO;
     }
 

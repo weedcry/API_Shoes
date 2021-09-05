@@ -72,23 +72,16 @@ public class repositoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(repository);
     }
 
-    @GetMapping("/doanhso/{mode}")
-    public ResponseEntity DoanhThu(@PathVariable Optional<String> mode) throws ParseException {
-        Object object =  repositoryService.doanhsoNhapHang(mode.get().toUpperCase());
+
+    @GetMapping("/nhaphang")
+    public ResponseEntity NhapHang(
+            @RequestParam(name = "mode") String mode,
+            @RequestParam(name = "id") Long idpro,
+            @RequestParam(name = "datefrom") String datefrom,
+            @RequestParam(name = "dateto") String dateto ) throws ParseException {
+
+        Object object =  repositoryService.slNhapHang(mode.toUpperCase(),idpro,datefrom,dateto);
         return ResponseEntity.status(HttpStatus.OK).body(object);
     }
-
-    @GetMapping("/soluong/{mode}")
-    public ResponseEntity SoLuong(@PathVariable Optional<String> mode) throws ParseException {
-        Object object =  repositoryService.slNhapHang(mode.get().toUpperCase());
-        return ResponseEntity.status(HttpStatus.OK).body(object);
-    }
-
-    @GetMapping("/tonkho")
-    public ResponseEntity TonKho()  {
-        Object object =  repositoryService.tonkho();
-        return ResponseEntity.status(HttpStatus.OK).body(object);
-    }
-
 
 }
