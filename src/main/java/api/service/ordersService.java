@@ -359,24 +359,41 @@ public class ordersService {
             strfloat[1] = totalloinhuan;
         }else{
             // lọc tất cả sản phẩm
+            ArrayList<Long> arrId = new ArrayList<>();
+            ArrayList<Float> arrPrice = new ArrayList<>();
+            float tongnhap = 0;
+            List<repositoryEntity> listrepo = repositoryRepository.findAll();
             for(ordersEntity order : list){
                 for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
-                        number+=orderdetail.getQuantity();
+                    // check
+                    int check = 0;
+                    for(int i = 0 ; i < arrId.size(); i++){
+                        if(orderdetail.getId() == arrId.get(i)){
+                            check = 1 ;
+                            tongnhap+=arrPrice.get(i)*orderdetail.getQuantity();
+                        }
+                    }
+                    if(check == 0){
+                        float totalnhaphang = 0;
+                        int count = 0;
+                        for(repositoryEntity repo : listrepo){
+                            if(repo.getProductdetail().getId() == orderdetail.getProductdetailEntity().getId()){
+                                count++;
+                                totalnhaphang+=repo.getPrice();
+                            }
+                        }
+                        if(count != 0){
+                            float tbnhaphnag = totalnhaphang / count;
+                            arrId.add(orderdetail.getId());
+                            arrPrice.add(tbnhaphnag);
+                            tongnhap+=tbnhaphnag*orderdetail.getQuantity();
+                        }
+                    }
                 }
                 totaldoanhthu+=order.getTotal();
             }
+            totalloinhuan = totaldoanhthu - tongnhap;
             strfloat[0] = totaldoanhthu;
-            //get repository
-            int count = 0;
-            List<repositoryEntity> listrepo = repositoryRepository.findAll();
-            for(repositoryEntity repo : listrepo){
-                    count++;
-                    totalloinhuan+=repo.getPrice();
-            }
-            if(count != 0){
-                totalloinhuan=totalloinhuan/count;
-                totalloinhuan = totaldoanhthu - (totalloinhuan*number);
-            }
             strfloat[1] = totalloinhuan;
         }
         return  strfloat;
