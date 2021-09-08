@@ -22,5 +22,6 @@ public interface ordersRepository extends JpaRepository<ordersEntity, String> {
 
     List<ordersEntity> findByModifiedDateBetweenAndStatus(Date datefrom, Date dateto, ordersEntity.Status status);
 
+    List<ordersEntity> findByCreatedDateBetweenAndStatus(Date datefrom, Date dateto, ordersEntity.Status status);
 
 }
