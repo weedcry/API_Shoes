@@ -446,7 +446,7 @@ public class ordersService {
 
             // tt don hang delivering
             ordersEntity.Status status3 = ordersEntity.Status.UNCONFIRM;
-            List<ordersEntity> list3 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status3);
+            List<ordersEntity> list3 = ordersRepository.findByCreatedDateBetweenAndStatus(datefrom,dateto,status3);
 
             for(ordersEntity order : list3){
                 for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
@@ -499,7 +499,7 @@ public class ordersService {
 
             // tt don hang delivering
             ordersEntity.Status status3 = ordersEntity.Status.UNCONFIRM;
-            List<ordersEntity> list3 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status3);
+            List<ordersEntity> list3 = ordersRepository.findByCreatedDateBetweenAndStatus(datefrom,dateto,status3);
 
             for(ordersEntity order : list3){
                 for(orderdetailEntity orderdetail : order.getOrderdetailEntities()){
@@ -527,7 +527,7 @@ public class ordersService {
             List<ordersEntity> list2 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status2);
             // tt don hang delivering
             ordersEntity.Status status3 = ordersEntity.Status.UNCONFIRM;
-            List<ordersEntity> list3 = ordersRepository.findByModifiedDateBetweenAndStatus(datefrom,dateto,status3);
+            List<ordersEntity> list3 = ordersRepository.findByCreatedDateBetweenAndStatus(datefrom,dateto,status3);
 
             strint[0] = list.size();
             strint[1] = list1.size();
